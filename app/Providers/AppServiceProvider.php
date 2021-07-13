@@ -13,7 +13,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
     }
 
     /**
@@ -23,6 +22,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        //$this->createSaraminDriver();
+    }
+
+    private function createSaraminDriver()
+    {
+        $socialite = $this->app->make('Laravel\Socialite\Contracts\Factory');
+        $socialite->extend(
+            'saramin',
+            function ($app) use ($socialite) {
+                $config = $app['config']['services.saramin'];
+                return $socialite->buildProvider(SaraminProvider::class, $config);
+            }
+        );
     }
 }
