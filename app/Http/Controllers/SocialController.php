@@ -30,7 +30,7 @@ class SocialController extends Controller
 
    protected function handleProviderCallback($provider){
        $socialData = Socialite::driver($provider)->user();
-        dd($socialData);
+       dd($socialData);
        // 필수 정보 조회 성공 여부 확인
        if (empty($socialData->token)) {
            Log::info('Loading' . $provider . ' access token is fail');
@@ -42,10 +42,7 @@ class SocialController extends Controller
            return redirect('/');
        }
 
-       dd($socialData);
-
-
-       auth()->login($user);
+       auth()->login($socialData);
        Log::info('Sign in: ' . auth()->user()->name);
        return redirect()->back();
    }

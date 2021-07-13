@@ -12,21 +12,28 @@ class SaraminProvider extends AbstractProvider
 
     public const IDENTIFIER = 'SARAMIN';
 
+
 //    protected $scopes = [
 //        "openid",
 //        "profile",
-//        "email",
-//        "name",
-//        "resume"
+//        "email"
 //    ];
 
     /**
      * {@inheritdoc}
      */
-    protected function getAuthUrl($state)
+    protected function formatScopes(array $scopes, $scopeSeparator): string
+    {
+        return implode(' ', $scopes);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getAuthUrl($state): string
     {
         return $this->buildAuthUrlFromBase(
-            'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/authorize',
+            'https://sid.saramin.co.kr/oauth/authorize',
             $state
         );
     }
@@ -34,9 +41,39 @@ class SaraminProvider extends AbstractProvider
     /**
      * {@inheritdoc}
      */
-    protected function getTokenUrl()
+    protected function getTokenUrl(): string
     {
-        return 'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/token';
+        return 'https://sid.saramin.co.kr/oauth/token';
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    protected function getUserByToken($token)
+    {
+        $response = $this->getHttpClient()->get(
+            'https://openapi.saramin.co.kr/api/user/oauth/user',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                ],
+                //'verify' => false,
+            ]);
+        dd($response->getBody()->getContents());
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function mapUserToObject($user)
+    {
+        dd($user);
+        return (new User)->setRaw($user)->map([
+            'name' => Arr::get($user, 'response.name'),
+            'email' => Arr::get($user, 'response.email'),
+        ]);
     }
 
     /**
@@ -49,32 +86,4 @@ class SaraminProvider extends AbstractProvider
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function getUserByToken($token)
-    {
-        $response = $this->getHttpClient()->get(
-            'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/user',
-            [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                ],
-            ]);
-
-        return json_decode($response->getBody()->getContents(), true);
-    }
-
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function mapUserToObject(array $user)
-    {
-        return (new User)->setRaw($user)->map([
-            'id' => $user['id'],
-            'email' => $user['email'],
-            'name' => $user['name'],
-        ]);
-    }
 }

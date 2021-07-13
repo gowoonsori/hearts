@@ -175,7 +175,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        //saramin oauth
+        //oauth
         \SocialiteProviders\Manager\ServiceProvider::class,
     ],
 
