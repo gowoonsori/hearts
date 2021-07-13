@@ -12,11 +12,13 @@ class SaraminProvider extends AbstractProvider
 
     public const IDENTIFIER = 'SARAMIN';
 
-    protected $scopes = [
-        "openid",
-        "profile",
-        "email"
-    ];
+//    protected $scopes = [
+//        "openid",
+//        "profile",
+//        "email",
+//        "name",
+//        "resume"
+//    ];
 
     /**
      * {@inheritdoc}
@@ -24,7 +26,7 @@ class SaraminProvider extends AbstractProvider
     protected function getAuthUrl($state)
     {
         return $this->buildAuthUrlFromBase(
-            'https://sid.saramin.co.kr/oauth/authorize',
+            'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/authorize',
             $state
         );
     }
@@ -34,16 +36,16 @@ class SaraminProvider extends AbstractProvider
      */
     protected function getTokenUrl()
     {
-        return 'https://sid.saramin.co.kr/oauth/token';
+        return 'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/token';
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function getTokenFields($code)
+    protected function getTokenFields($code): array
     {
         return array_merge(parent::getTokenFields($code), [
-            'grant_type' => 'authorization_code'
+            'grant_type' => 'authorization_code',
         ]);
     }
 
@@ -53,7 +55,7 @@ class SaraminProvider extends AbstractProvider
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            'https://ea-auth-apigateway.sri-kube.saraminhr.co.kr/api/user/oauth/user',
+            'https://sid.sri-kube-dev.saraminhr.co.kr/oauth/user',
             [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,

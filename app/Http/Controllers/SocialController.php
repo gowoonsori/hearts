@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -28,9 +29,24 @@ class SocialController extends Controller
    }
 
    protected function handleProviderCallback($provider){
-        $user = Socialite::driver($provider)->user();
+       $socialData = Socialite::driver($provider)->user();
+        dd($socialData);
+       // 필수 정보 조회 성공 여부 확인
+       if (empty($socialData->token)) {
+           Log::info('Loading' . $provider . ' access token is fail');
+           return redirect('/');
+       }
 
-        dd($user);
-        return $user;
+       if (empty($socialData->getEmail())) {
+           Log::info('Loading' . $provider . ' user email is fail');
+           return redirect('/');
+       }
+
+       dd($socialData);
+
+
+       auth()->login($user);
+       Log::info('Sign in: ' . auth()->user()->name);
+       return redirect()->back();
    }
 }
