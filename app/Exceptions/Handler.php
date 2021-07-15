@@ -2,6 +2,9 @@
 
 namespace App\Exceptions;
 
+use App\utils\ApiUtils;
+use Facade\FlareClient\Api;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -35,7 +38,23 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
         });
+    }
+
+    //Exception Handling
+    public function render($request,Throwable $e){
+        //default 404 error
+        $error = $e;
+        $statusCode = 404;
+
+       if($e instanceof BadRequestException){
+            $statusCode = 400;
+        }else if($e instanceof UnauthorizeException){
+           $statusCode = 401;
+       }else if($e instanceof ForbiddenException){
+           $statusCode = 403;
+       }
+
+        return ApiUtils::error($error,$statusCode);
     }
 }
