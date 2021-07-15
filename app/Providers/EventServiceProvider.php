@@ -19,7 +19,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         \SocialiteProviders\Manager\SocialiteWasCalled::class => [
             'SocialiteProviders\Naver\NaverExtendSocialite@handle',
-            'App\oauth\SaraminExtendSocialite@handle',
+            'App\Oauth\SaraminExtendSocialite@handle',
         ],
     ];
 

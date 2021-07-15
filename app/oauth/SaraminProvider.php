@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\oauth;
+namespace App\Oauth;
 
 use Illuminate\Support\Arr;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
@@ -11,21 +11,22 @@ class SaraminProvider extends AbstractProvider
 {
 
     public const IDENTIFIER = 'SARAMIN';
+    private const OAUTH_URL = 'https://sid.saramin.co.kr';
+    private const GATEWAY_URL = 'https://openapi.saramin.co.kr';
 
-
-//    protected $scopes = [
-//        "openid",
-//        "profile",
-//        "email"
-//    ];
+    protected $scopes = [
+        "openid",
+        "profile",
+        "email",
+        "resume",
+    ];
 
     /**
      * {@inheritdoc}
      */
-    protected function formatScopes(array $scopes, $scopeSeparator): string
-    {
-        return implode(' ', $scopes);
-    }
+    protected $scopeSeparator = ' ';
+
+
 
     /**
      * {@inheritdoc}
@@ -33,7 +34,7 @@ class SaraminProvider extends AbstractProvider
     protected function getAuthUrl($state): string
     {
         return $this->buildAuthUrlFromBase(
-            'https://sid.saramin.co.kr/oauth/authorize',
+            self::OAUTH_URL . '/oauth/authorize',
             $state
         );
     }
@@ -43,7 +44,7 @@ class SaraminProvider extends AbstractProvider
      */
     protected function getTokenUrl(): string
     {
-        return 'https://sid.saramin.co.kr/oauth/token';
+        return self::OAUTH_URL . '/oauth/token';
     }
 
     /**
@@ -53,37 +54,25 @@ class SaraminProvider extends AbstractProvider
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            'https://openapi.saramin.co.kr/api/user/oauth/user',
+            self::GATEWAY_URL . '/api/user/oauth/user',
             [
                 'headers' => [
+                    'Accept' => 'application/json',
                     'Authorization' => 'Bearer ' . $token,
                 ],
-                //'verify' => false,
             ]);
-        dd($response->getBody()->getContents());
-        return json_decode($response->getBody()->getContents(), true);
+        return json_decode($response->getBody(), true);
     }
 
     /**
      * {@inheritdoc}
      */
-    protected function mapUserToObject($user)
+    protected function mapUserToObject($user): User
     {
-        dd($user);
-        return (new User)->setRaw($user)->map([
-            'name' => Arr::get($user, 'response.name'),
-            'email' => Arr::get($user, 'response.email'),
+        return (new User())->setRaw($user)->map([
+            'id' => Arr::get($user, 'sub'),
+            'name' => Arr::get($user, 'name'),
+            'email' => Arr::get($user, 'email'),
         ]);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function getTokenFields($code): array
-    {
-        return array_merge(parent::getTokenFields($code), [
-            'grant_type' => 'authorization_code',
-        ]);
-    }
-
 }

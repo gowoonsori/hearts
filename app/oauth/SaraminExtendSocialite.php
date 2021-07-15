@@ -1,6 +1,6 @@
 <?php
 
-namespace App\oauth;
+namespace App\Oauth;
 
 use \SocialiteProviders\Manager\SocialiteWasCalled;
 
@@ -8,6 +8,6 @@ class SaraminExtendSocialite
 {
     public function handle(SocialiteWasCalled $socialiteWasCalled)
     {
-        $socialiteWasCalled->extendSocialite('saramin', \App\oauth\SaraminProvider::class);
+        $socialiteWasCalled->extendSocialite('saramin', \App\Oauth\SaraminProvider::class);
     }
 }
