@@ -32,9 +32,9 @@ class User extends Authenticatable
         return $this->hasMany(Post::class);
     }
 
-    public function categories() : HasMany
+    public function categories() : BelongsToMany
     {
-        return $this->hasMany(Category::class);
+        return $this->belongsToMany(Category::class,'user_category');
     }
 
     public function likes() : BelongsToMany

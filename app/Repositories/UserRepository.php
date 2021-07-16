@@ -37,7 +37,6 @@ class UserRepository
                 'created_at' => $nowDt
             ]);
         } catch (QueryException $exception) {
-            Log::info('Sign Up Fail');
             Log::error("Sign Up Fail Error Message: \n".$exception);
             throw new InternalServerException("사용자 등록중 오류가 발생했습니다.");
         }

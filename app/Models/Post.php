@@ -20,6 +20,7 @@ class Post extends Model
         'visit_cnt',
         'search',
         'user_id',
+        'category_id',
     ];
 
     public function user(): BelongsTo

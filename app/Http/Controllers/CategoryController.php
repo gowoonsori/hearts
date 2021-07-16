@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
 use App\Repositories\CategoryRepository;
+use App\Repositories\UserCategoryRepository;
 use App\Repositories\UserRepository;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
@@ -14,11 +16,14 @@ class CategoryController extends Controller
 {
     protected $userRepository;
     protected $categoryRepository;
+    protected $userCategoryRepository;
 
-    public function __construct(UserRepository $userRepository, CategoryRepository $categoryRepository)
+    public function __construct(UserRepository $userRepository, CategoryRepository $categoryRepository,
+                                    UserCategoryRepository $userCategoryRepository)
     {
         $this->userRepository = $userRepository;
         $this->categoryRepository = $categoryRepository;
+        $this->userCategoryRepository = $userCategoryRepository;
     }
 
     /**
@@ -29,7 +34,7 @@ class CategoryController extends Controller
      * @return JsonResponse
      * @throws NotFoundException
      */
-    function getCategory(Request $request, string $userId): JsonResponse
+    function getCategories(Request $request, string $userId): JsonResponse
     {
         $user = $this->userRepository->findById($userId);
         if (empty($user)) {
@@ -50,27 +55,37 @@ class CategoryController extends Controller
     /**
      * @param Request $request
      * @param string $userId
-     * @throws NotFoundException
      * @return JsonResponse
+     * @throws NotFoundException
      */
-    public function insertCategory(Request $request, string $userId): JsonResponse
+    public function createCategory(Request $request, string $userId): JsonResponse
     {
-        //title validate
+        //request body($title) validate
         $title = $request['title'];
-        if(empty($title)){
+        if (empty($title)) {
             Log::error('잘못된 입력입니다.');
             throw new NotFoundException('잘못된 입력입니다.');
         }
 
-        //카테고리 존재하는지 확인
-        $user = $this->userRepository->findById($userId);
-        $category = $user->categories()->whereTitle($title)->get();
-        if(!empty($category->all())){
-            Log::error("이미 존재하는 카테고리 입니다.");
-            throw new NotFoundException("이미 존재하는 카테고리 입니다.");
+        //카테고리 테이블에 카테고리가 존재하는지 확인
+        $category = $this->categoryRepository->findByTitle($title);
+        if (empty($category)) {
+            //없다면 새로 생성
+            $category = $this->categoryRepository->insert($title);
+        }else{
+            //있다면 내가 가진 카테고리인지 확인
+            $isMyCategory = $this->userCategoryRepository->haveCategory($userId,$category->id);
+            if(!empty($isMyCategory)){
+                throw new BadRequestException('이미 존재하는 카테고리입니다.');
+            }
         }
 
-        $category = $this->categoryRepository->insert($title,$userId);
-        return ApiUtils::success($user->categories()->save($category));
+        //user와의 연관관계 설정
+        if (empty($MyCategory) && $category->users()) {
+            $user = $this->userRepository->findById($userId);
+            $category->users()->save($user);
+        }
+
+        return ApiUtils::success($category);
     }
 }

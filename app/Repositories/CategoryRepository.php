@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CategoryRepository
@@ -27,23 +28,24 @@ class CategoryRepository
      * @return Category|bool|Collection
      */
     public function findByTitle($title){
-        $category = $this->category->whereTitle($title)->get();
+        $category = $this->category->where(['title' => $title])->first();
         if(empty($category)){
             return false;
         }
         return $category;
     }
+
     /**
+     * 카테고리 삽입
      * @param $title
      * @return User|bool|Model
      */
-    public function insert($title,$userId){
+    public function insert($title){
         $nowDt = now();
 
         try {
             return $this->category->create([
                 'title' => $title,
-                'user_id' => $userId,
                 'updated_at' => $nowDt,
                 'created_at' => $nowDt
             ]);
@@ -52,5 +54,4 @@ class CategoryRepository
             throw new ModelNotFoundException("카테고리 생성중 오류가 발생했습니다.");
         }
     }
-
 }
