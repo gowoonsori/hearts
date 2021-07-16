@@ -22,8 +22,14 @@ Route::prefix('user/{userId}')->group(function(){
 
     //카테고리
     Route::prefix('category')->group(function(){
-        Route::get('/', 'CategoryController@getCategory');
-        Route::post('/','CategoryController@insertCategory');
+        Route::get('/', 'CategoryController@getCategories');
+        Route::post('/','CategoryController@createCategory');
+    });
+
+    //문구
+    Route::prefix('post')->group(function(){
+        Route::post('/','PostController@createPost');
+        Route::get('/{postId}','PostController@getPost');
     });
 });
 
