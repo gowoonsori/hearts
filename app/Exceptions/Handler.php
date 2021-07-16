@@ -44,7 +44,7 @@ class Handler extends ExceptionHandler
     //Exception Handling
     public function render($request,Throwable $e){
         //default 404 error
-        $error = $e;
+        $error = $e->getMessage() ? $e: '찾을 수 없습니다.';
         $statusCode = 404;
 
        if($e instanceof BadRequestException){
