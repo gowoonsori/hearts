@@ -24,16 +24,26 @@ class CategoryRepository
 
 
     /**
+     * 문구로 검색
      * @param $title
-     * @return Category|bool|Collection
+     * @return Category| null
      */
-    public function findByTitle($title){
-        $category = $this->category->where(['title' => $title])->first();
-        if(empty($category)){
-            return false;
-        }
-        return $category;
+    public function findByTitle($title): ?Category
+    {
+        return $this->category->where(['title' => $title])->first();
     }
+
+    /**
+     * id로 문구 검색
+     * @param $id
+     * @return Category|null
+     */
+    public function findById($id): ?Category
+    {
+        return $this->category->where(['id' => $id])->first();
+    }
+
+
 
     /**
      * 카테고리 삽입

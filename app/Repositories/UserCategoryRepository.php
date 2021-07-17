@@ -14,7 +14,7 @@ class UserCategoryRepository
      * 내가 가진 카테고리인지 확인
      * @param integer $userId
      * @param integer $categoryId
-     * @return Model | Object
+     * @return Model | Object | null
      */
     function haveCategory(int $userId, int $categoryId)
     {

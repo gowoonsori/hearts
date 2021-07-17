@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Dtos\PostDto;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
 use App\Models\Post;
@@ -12,6 +13,7 @@ use App\Repositories\UserRepository;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Psy\Util\Json;
 
 class PostController extends Controller
 {
@@ -25,11 +27,13 @@ class PostController extends Controller
         $this->postRepository = $postRepository;
     }
 
-    /*
-     * postId로 문구 조회
-     *
-     * */
+
     /**
+     * postId로 문구 조회
+     * @param Request $request
+     * @param integer $userId
+     * @param integer $postId
+     * @return JsonResponse
      * @throws BadRequestException
      * @throws NotFoundException
      */
@@ -50,10 +54,37 @@ class PostController extends Controller
     }
 
     /**
+     * 사용자(자신)의 모든 문구 조회
+     * @param Request $request
+     * @param integer $userId
+     * @return JsonResponse
+     */
+    function getPosts(Request $request, int $userId) : JsonResponse
+    {
+        $post = $this->postRepository->findAll($userId);
+        if(empty($post)) $post = null;
+        return ApiUtils::success($post);
+    }
+
+    /**
+     * 사용자(자신)의 모든 문구 조회
+     * @param Request $request
+     * @param integer $userId
+     * @return JsonResponse
+     */
+    function getPostsByCategory(Request $request, int $userId,int $categoryId) : JsonResponse
+    {
+        $post = $this->postRepository->findByCategory($userId,$categoryId);
+        if(empty($post)) $post = null;
+        return ApiUtils::success($post);
+    }
+
+    /**
      * @param Request $request
      * @param integer $userId
      * @return JsonResponse
      * @throws NotFoundException
+     * @throws BadRequestException
      */
     function createPost(Request $request, int $userId) : JsonResponse
     {
@@ -62,18 +93,12 @@ class PostController extends Controller
             throw new NotFoundException('존재하지 않은 사용자입니다.');
         }
 
-        $post = new Post;
-        $post->content = $request['content'];
-        $post->total_like = 0;
-        $post->share_cnt = 0;
-        $post->visit_cnt = 0;
-        $post->search = $request['search'];
-        $post->category_id = $request['category_id'];
-        $post->user_id = $userId;
+        $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId);
 
-        $user->post()->save($post);
-        return ApiUtils::success($post);
+        $user->post()->save($postDto->getPost());
+        return ApiUtils::success($postDto->getPost());
     }
+
 
 
 }

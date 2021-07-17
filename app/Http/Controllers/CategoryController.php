@@ -53,6 +53,8 @@ class CategoryController extends Controller
 
 
     /**
+     * 카테고리 생성 메서드
+     *
      * @param Request $request
      * @param string $userId
      * @return JsonResponse

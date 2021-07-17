@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PostRepository
@@ -22,11 +23,12 @@ class PostRepository
     }
 
     /**
-     * @param $socialData
+     * @param array $postData
+     * @param integer $userId
      * @return User|Model
      * @throws InternalServerException
      */
-    public function insert($postData,$userId){
+    public function insert(array $postData,int $userId){
         $nowDt = now();
         try {
             return $this->post->create([
@@ -49,27 +51,36 @@ class PostRepository
 
     /**
      * Obtain the user information by data table idx.
-     * @param $id
-     * @return User|bool|Collection|Model
+     * @param integer $id
+     * @return null |Model
      */
-    public function findById($id){
-        $post = $this->post->find($id);
-        if(empty($post)){
-            Log::info('whereId(): id '.$id.' user is not found');
-            return false;
-        }
-        return $post;
+    public function findById(int $id): ?Model
+    {
+        return $this->post->where(['id'=>$id])->first();
     }
+
+    /**
+     * Category로 자신의 문구 조회
+     * @param integer $userId
+     * @param integer $categoryId
+     * @return array | Collection
+     */
+    public function findByCategory(int $userId,int $categoryId)
+    {
+        $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
+        if(empty($posts->all())) return [];
+        return $posts;
+    }
+
     /**
      * Obtain all user's information in random order
      *
      * @return User[]|bool|Collection
      */
-    public function findAll(){
-        $posts = $this->post->get();
+    public function findAll($userId){
+        $posts = $this->post->where(['user_id'=>$userId])->get();
         if(empty($posts->all())){
-            Log::info('all(): user table is empty.');
-            return false;
+            return [];
         }
         return $posts;
     }

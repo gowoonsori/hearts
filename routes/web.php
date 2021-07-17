@@ -29,7 +29,9 @@ Route::prefix('user/{userId}')->group(function(){
     //문구
     Route::prefix('post')->group(function(){
         Route::post('/','PostController@createPost');
+        Route::get('/all','PostController@getPosts');
         Route::get('/{postId}','PostController@getPost');
+        Route::get('/category/{categoryId}','PostController@getPostsByCategory');
     });
 });
 
