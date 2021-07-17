@@ -10,7 +10,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PostRepository
@@ -52,11 +51,11 @@ class PostRepository
     /**
      * Obtain the user information by data table idx.
      * @param integer $id
-     * @return null |Model
+     * @return null | Model
      */
     public function findById(int $id): ?Model
     {
-        return $this->post->where(['id'=>$id])->first();
+        return $this->post->find($id);
     }
 
     /**
@@ -65,7 +64,7 @@ class PostRepository
      * @param integer $categoryId
      * @return array | Collection
      */
-    public function findByCategory(int $userId,int $categoryId)
+    public function findByCategories(int $userId,int $categoryId)
     {
         $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
         if(empty($posts->all())) return [];

@@ -8,7 +8,10 @@ use App\Dtos\PostDto;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
 use App\Models\Post;
+use App\Models\Tag;
 use App\Repositories\PostRepository;
+use App\Repositories\PostTagRepository;
+use App\Repositories\TagRepository;
 use App\Repositories\UserRepository;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
@@ -19,12 +22,17 @@ class PostController extends Controller
 {
     protected $userRepository;
     protected $postRepository;
+    protected $tagRepository;
+    protected $postTagRepository;
 
 
-    public function __construct(UserRepository $userRepository, PostRepository $postRepository)
+    public function __construct(UserRepository $userRepository, PostRepository $postRepository,
+                                TagRepository $tagRepository,PostTagRepository $postTagRepository)
     {
         $this->userRepository = $userRepository;
         $this->postRepository = $postRepository;
+        $this->tagRepository = $tagRepository;
+        $this->postTagRepository = $postTagRepository;
     }
 
 
@@ -74,12 +82,13 @@ class PostController extends Controller
      */
     function getPostsByCategory(Request $request, int $userId,int $categoryId) : JsonResponse
     {
-        $post = $this->postRepository->findByCategory($userId,$categoryId);
+        $post = $this->postRepository->findByCategories($userId,$categoryId);
         if(empty($post)) $post = null;
         return ApiUtils::success($post);
     }
 
     /**
+     * 문구 등록
      * @param Request $request
      * @param integer $userId
      * @return JsonResponse
@@ -93,10 +102,22 @@ class PostController extends Controller
             throw new NotFoundException('존재하지 않은 사용자입니다.');
         }
 
+        //request body 유효성 검사
         $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId);
+        $post = $postDto->getPost();
+        //문구 등록
+        $user->post()->save($post);
 
-        $user->post()->save($postDto->getPost());
-        return ApiUtils::success($postDto->getPost());
+
+        //tag null이 아니라면 tag 등록
+        $tagsRequest = $request['tags'];
+        if(!empty($tagsRequest)){
+            $tags = $this->tagRepository->insert($tagsRequest);   //tags 삽입
+            $this->postTagRepository->insert($post,$tags);
+        }
+
+        //tag정보까지 지연로딩 후 반환
+        return ApiUtils::success($post->load('tags'));
     }
 
 
