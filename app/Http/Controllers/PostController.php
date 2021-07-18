@@ -75,14 +75,14 @@ class PostController extends Controller
     }
 
     /**
-     * 사용자(자신)의 모든 문구 조회
+     * 특정 카테고리의 사용자(자신)의 모든 문구 조회
      * @param Request $request
      * @param integer $userId
      * @return JsonResponse
      */
     function getPostsByCategory(Request $request, int $userId,int $categoryId) : JsonResponse
     {
-        $post = $this->postRepository->findByCategories($userId,$categoryId);
+        $post = $this->postRepository->findMyPostsByCategories($userId,$categoryId);
         if(empty($post)) $post = null;
         return ApiUtils::success($post);
     }

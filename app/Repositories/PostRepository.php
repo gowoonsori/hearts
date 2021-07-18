@@ -49,7 +49,7 @@ class PostRepository
 
 
     /**
-     * Obtain the user information by data table idx.
+     * 특정 id의 문구 조회
      * @param integer $id
      * @return null | Model
      */
@@ -64,7 +64,7 @@ class PostRepository
      * @param integer $categoryId
      * @return array | Collection
      */
-    public function findByCategories(int $userId,int $categoryId)
+    public function findMyPostsByCategories(int $userId,int $categoryId)
     {
         $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
         if(empty($posts->all())) return [];

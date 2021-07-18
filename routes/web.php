@@ -22,22 +22,21 @@ Route::prefix('user/{userId}')->group(function(){
 
     //카테고리
     Route::prefix('category')->group(function(){
-        Route::get('/', 'CategoryController@getCategories');
-        Route::post('/','CategoryController@createCategory');
+        Route::get('/', 'CategoryController@getCategories');    //내 카테고리 조회
+        Route::post('/','CategoryController@createCategory');   //카테고리 생성
     });
 
     //문구
     Route::prefix('post')->group(function(){
-        Route::post('/','PostController@createPost');
-        Route::get('/all','PostController@getPosts');
-        Route::get('/{postId}','PostController@getPost');
-        Route::get('/category/{categoryId}','PostController@getPostsByCategory');
+        Route::post('/','PostController@createPost');       //문구 생성
+        Route::get('/all','PostController@getPosts');       //나의 모든 문구 조회
+        Route::get('/{postId}','PostController@getPost');   //문구id로 문구 조회
+        Route::get('/category/{categoryId}','PostController@getPostsByCategory'); //특정 카테고리의 나의 문구들 조회
     });
 });
 
-//Oauth Redirect
+//Oauth Redirect url
 Route::get('/login/{provider}','SocialController@execute');
 
 //Callback URL
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
-Route::get('/login/oauth2/code/naver','SocialController@show');
