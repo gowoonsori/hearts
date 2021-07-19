@@ -27,12 +27,7 @@ class TagRepository
      */
     public function insert(array $tags): Collection
     {
-        $tagList = [];
-        foreach($tags as $tag){
-           array_push($tagList,['title'=>$tag]);
-        }
-
-        DB::table('tags')->insertOrIgnore($tagList);
+        DB::table('tags')->insertOrIgnore($tags);
         return DB::table('tags')->whereIn('title',$tags)->get();
     }
 

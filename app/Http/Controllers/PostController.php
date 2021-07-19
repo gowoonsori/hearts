@@ -6,33 +6,26 @@ namespace App\Http\Controllers;
 
 use App\Dtos\PostDto;
 use App\Exceptions\BadRequestException;
+use App\Exceptions\InternalServerException;
 use App\Exceptions\NotFoundException;
-use App\Models\Post;
-use App\Models\Tag;
-use App\Repositories\PostRepository;
-use App\Repositories\PostTagRepository;
-use App\Repositories\TagRepository;
-use App\Repositories\UserRepository;
+use App\Services\PostService;
+use App\Services\TagService;
+use App\Services\UserService;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Psy\Util\Json;
 
 class PostController extends Controller
 {
-    protected $userRepository;
-    protected $postRepository;
-    protected $tagRepository;
-    protected $postTagRepository;
+    protected $postService;
+    protected $userService;
+    protected $tagService;
 
-
-    public function __construct(UserRepository $userRepository, PostRepository $postRepository,
-                                TagRepository $tagRepository,PostTagRepository $postTagRepository)
+    public function __construct(PostService $postService,UserService $userService,TagService $tagService)
     {
-        $this->userRepository = $userRepository;
-        $this->postRepository = $postRepository;
-        $this->tagRepository = $tagRepository;
-        $this->postTagRepository = $postTagRepository;
+        $this->postService = $postService;
+        $this->userService = $userService;
+        $this->tagService = $tagService;
     }
 
 
@@ -40,22 +33,25 @@ class PostController extends Controller
      * postId로 문구 조회
      * @param Request $request
      * @param integer $userId
-     * @param integer $postId
+     * queryString postId
      * @return JsonResponse
      * @throws BadRequestException
      * @throws NotFoundException
+     * @throws InternalServerException
      */
-    function getPost(Request $request, int $userId, int $postId) : JsonResponse
+    function getPost(Request $request, int $userId) : JsonResponse
     {
-        $post = $this->postRepository->findById($postId);
+        //validate
+        $postId = $request->query('postId');
+
+
+        $post = $this->postService->getPostById($postId);
         // id가 존재하지 않는 경우
-        if(empty($post)){
-            throw new NotFoundException('존재하지 않은 문구입니다.');
-        }
+
 
         //문구가 검색 불가 설정인데 자기 문구가 아닌 경우
         if(!$post->search && $post->user_id != $userId){
-            throw new BadRequestException('');
+            throw new BadRequestException('조회할 수 없는 문구 입니다.');
         }
 
         return ApiUtils::success($post);
@@ -66,25 +62,25 @@ class PostController extends Controller
      * @param Request $request
      * @param integer $userId
      * @return JsonResponse
+     * @throws NotFoundException|InternalServerException
      */
     function getPosts(Request $request, int $userId) : JsonResponse
     {
-        $post = $this->postRepository->findAll($userId);
-        if(empty($post)) $post = null;
-        return ApiUtils::success($post);
+        $user = $this->userService->getInfo($userId);
+        return ApiUtils::success($this->postService->getPostsByUserId($userId));
     }
 
     /**
      * 특정 카테고리의 사용자(자신)의 모든 문구 조회
      * @param Request $request
      * @param integer $userId
+     * @param int $categoryId
      * @return JsonResponse
+     * @throws InternalServerException
      */
     function getPostsByCategory(Request $request, int $userId,int $categoryId) : JsonResponse
     {
-        $post = $this->postRepository->findMyPostsByCategories($userId,$categoryId);
-        if(empty($post)) $post = null;
-        return ApiUtils::success($post);
+        return ApiUtils::success( $this->postService->getPostsByCategories($userId,$categoryId));
     }
 
     /**
@@ -97,29 +93,40 @@ class PostController extends Controller
      */
     function createPost(Request $request, int $userId) : JsonResponse
     {
-        $user = $this->userRepository->findById($userId);
-        if(empty($user)){
-            throw new NotFoundException('존재하지 않은 사용자입니다.');
-        }
+        $user = $this->userService->getInfo($userId);
 
         //request body 유효성 검사
         $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId);
         $post = $postDto->getPost();
+
         //문구 등록
-        $user->post()->save($post);
+        $this->userService->createPost($user, $post);
 
-
-        //tag null이 아니라면 tag 등록
+        //tag null이 아니라면 tag 등록과 연결
         $tagsRequest = $request['tags'];
         if(!empty($tagsRequest)){
-            $tags = $this->tagRepository->insert($tagsRequest);   //tags 삽입
-            $this->postTagRepository->insert($post,$tags);
+            $tags = $this->tagService->createTag($tagsRequest);
+            $this->postService->connectWithTags($post, $tags);
         }
 
         //tag정보까지 지연로딩 후 반환
         return ApiUtils::success($post->load('tags'));
     }
 
+    /**
+     * 문구 공유횟수 update
+     * @param Request $request
+     * @param int $postId
+     * @return JsonResponse
+     * @throws InternalServerException
+     * @throws NotFoundException
+     */
+    function updateShareCount(Request $request,int $postId) : JsonResponse
+    {
+        $post = $this->postService->getPostById($postId);
+        $success = $this->postService->updateShareCount($post);
+        if(!$success) throw new InternalServerException('update도중 오류가 발생했습니다.');
 
-
+        return ApiUtils::success($post);
+    }
 }

@@ -27,7 +27,7 @@ class User extends Authenticatable
 
     protected $hidden = ['access_token'];
 
-    public function post(): HasMany
+    public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
     }
@@ -39,6 +39,6 @@ class User extends Authenticatable
 
     public function likes() : BelongsToMany
     {
-        return $this->belongsToMany(Like::class);
+        return $this->belongsToMany(Post::class,'likes');
     }
 }

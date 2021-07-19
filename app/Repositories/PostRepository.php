@@ -4,12 +4,16 @@
 namespace App\Repositories;
 
 
+use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerException;
 use App\Models\Post;
 use App\Models\User;
+use http\Exception\BadQueryStringException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PostRepository
@@ -52,35 +56,71 @@ class PostRepository
      * 특정 id의 문구 조회
      * @param integer $id
      * @return null | Model
+     * @throws InternalServerException
      */
     public function findById(int $id): ?Model
     {
-        return $this->post->find($id);
+        try{
+            return $this->post->find($id);
+        }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
+        }
     }
+
+    /**
+     * 특정 id의 문구 조회
+     * @param integer $id
+     * @throws InternalServerException
+     */
+    public function findByIdWithTags(int $id)
+    {
+        try{
+           return $this->post->with('tags')->find($id);
+        }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
+        }
+
+    }
+
 
     /**
      * Category로 자신의 문구 조회
      * @param integer $userId
      * @param integer $categoryId
      * @return array | Collection
+     * @throws InternalServerException
      */
     public function findMyPostsByCategories(int $userId,int $categoryId)
     {
-        $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
-        if(empty($posts->all())) return [];
-        return $posts;
+        try{
+            $posts = $this->post->with('tags')->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
+            if(empty($posts->all())) return [];
+            return $posts;
+        }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
+        }
     }
 
     /**
      * Obtain all user's information in random order
      *
-     * @return User[]|bool|Collection
+     * @return Collection|User[]
+     * @throws InternalServerException
      */
     public function findAll($userId){
-        $posts = $this->post->where(['user_id'=>$userId])->get();
-        if(empty($posts->all())){
-            return [];
+        try{
+            $posts = $this->post->with('tags')->where(['user_id'=>$userId])->get();
+            if(empty($posts->all())){
+                return [];
+            }
+            return $posts;
+        }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }
-        return $posts;
+    }
+
+    public function incrementLikeCnt(int $postId){
+        DB::table('posts')->where(['id'=>$postId])
+            ->increment('total_like');
     }
 }
