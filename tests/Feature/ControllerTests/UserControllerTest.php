@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class UserControllerTest extends TestCase
@@ -17,9 +18,7 @@ class UserControllerTest extends TestCase
         $response = $this->getJson('/user/' . $userId);
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertSee('id')
             ->assertJsonPath('response.name','홍의성')
-            ->assertJsonPath('response.email','gowoonsori97@gmail.com')
             ->assertSee('created_at')
             ->assertSee('updated_at');
 

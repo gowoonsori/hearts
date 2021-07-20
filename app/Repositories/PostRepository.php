@@ -70,6 +70,7 @@ class PostRepository
     /**
      * 특정 id의 문구 조회
      * @param integer $id
+     * @return Builder|Builder[]|Collection|Model|null
      * @throws InternalServerException
      */
     public function findByIdWithTags(int $id)
@@ -79,7 +80,25 @@ class PostRepository
         }catch (QueryException $e){
             throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }
+    }
 
+    /**
+     * 특정 id의 문구 조회 raw query로 post와 tag한번에 조회
+     * @param integer $id
+     * @return \Illuminate\Support\Collection
+     * @throws InternalServerException
+     */
+    public function findByIdWithTagsRaw(int $id): \Illuminate\Support\Collection
+    {
+        try{
+            return DB::table('posts')
+                ->select('posts.*', 'tags.id AS tag_id','tags.title AS tag_title')
+                ->join('post_tag','posts.id','=','post_tag.post_id')
+                ->join('tags','post_tag.tag_id','=','tags.id')
+                ->where(['posts.id' => $id])->get();
+        }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
+        }
     }
 
 
@@ -117,10 +136,5 @@ class PostRepository
         }catch (QueryException $e){
             throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }
-    }
-
-    public function incrementLikeCnt(int $postId){
-        DB::table('posts')->where(['id'=>$postId])
-            ->increment('total_like');
     }
 }

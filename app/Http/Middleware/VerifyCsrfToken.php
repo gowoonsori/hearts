@@ -17,6 +17,8 @@ class VerifyCsrfToken extends Middleware
             'http://localhost:8000/user/1/post', //This is the url that I dont want Csrf for postman.
             'http://localhost:8000/user/1/post/1/like',
             'http://localhost:8000/user/1/post/1/like',
-            'http://localhost:8000/post/1/share'
+            'http://localhost:8000/post/1/share',
+            'http://localhost:8000/user/1/post/34/like',
+            'http://localhost:8000/search'
     ];
 }

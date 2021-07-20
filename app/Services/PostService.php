@@ -10,8 +10,6 @@ use App\Models\Post;
 use App\Models\User;
 use App\Repositories\PostRepository;
 use App\Repositories\PostTagRepository;
-use App\Repositories\TagRepository;
-use App\Repositories\UserRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

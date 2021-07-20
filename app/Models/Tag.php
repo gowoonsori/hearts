@@ -13,11 +13,10 @@ class Tag extends Model
     public $timestamps = false;
 
     protected $fillable = [
-       'title',
-        'post_id'
+       'title','post_id'
     ];
 
-    protected $hidden = ['pivot'];
+    protected $hidden = ['pivot','created_at','updated_at'];
 
     public function posts() : BelongsToMany
     {

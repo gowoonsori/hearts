@@ -25,7 +25,7 @@ class User extends Authenticatable
         'access_token',
     ];
 
-    protected $hidden = ['access_token'];
+    protected $hidden = ['access_token','social_id','email','id','pivot'];
 
     public function posts(): HasMany
     {

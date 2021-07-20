@@ -8,6 +8,7 @@ use App\Exceptions\NotFoundException;
 use App\Models\Post;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 class UserService
 {
@@ -19,6 +20,8 @@ class UserService
     }
 
     /**
+     * 유저 정보  id로 조회
+     * 쿼리 1번 발생
      * @param integer $userId
      * @return User
      * @throws NotFoundException
@@ -33,11 +36,24 @@ class UserService
     }
 
     /**
+     * 문구 생성
+     * 쿼리 1번 발생
      * @param User $user
      * @param Post $post
      * @return void
      * */
     public function createPost(User $user, Post $post){
         $user->posts()->save($post);
+    }
+
+    /**
+     * 좋아요한 문구들 조회
+     * 쿼리 2번 발생
+     * @param User $user
+     * @return Collection
+     * */
+    public function getLikePosts(User $user): Collection
+    {
+        return $user->likes()->with('tags')->get();
     }
 }

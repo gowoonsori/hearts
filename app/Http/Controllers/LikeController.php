@@ -26,10 +26,21 @@ class LikeController extends Controller
 
     /**
      * @throws NotFoundException
+     */
+    public function getLikePosts(Request $request, int $userId): JsonResponse
+    {
+        $user = $this->userService->getInfo($userId);
+        $posts = $this->userService->getLikePosts($user);
+        return ApiUtils::success($posts);
+    }
+
+
+    /**
+     * @throws NotFoundException
      * @throws InternalServerException
      * @throws BadRequestException
      */
-    public function like(Request $request, int $userId, int $postId): JsonResponse
+    public function likePost(Request $request, int $userId, int $postId): JsonResponse
     {
         $user = $this->userService->getInfo($userId);
         $post = $this->postService->getPostById($postId);
@@ -49,7 +60,7 @@ class LikeController extends Controller
      * @throws InternalServerException
      * @throws BadRequestException
      */
-    public function unlike(Request $request, int $userId, int $postId): JsonResponse
+    public function unlikePost(Request $request, int $userId, int $postId): JsonResponse
     {
         $user = $this->userService->getInfo($userId);
         $post = $this->postService->getPostById($postId);

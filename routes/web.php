@@ -32,11 +32,12 @@ Route::prefix('user/{userId}')->group(function(){
         Route::get('/all','PostController@getPosts');       //나의 모든 문구 조회
         Route::get('/','PostController@getPost');   //문구id로 문구 조회
         Route::get('/category/{categoryId}','PostController@getPostsByCategory'); //특정 카테고리의 나의 문구들 조회
+        Route::get('/like','LikeController@getLikePosts');    //내가 좋아요한 문구 조회
 
         //좋아요
         Route::prefix('/{postId}/like')->group(function(){
-            Route::patch('/','LikeController@like');    //좋아요
-            Route::delete('/','LikeController@unlike'); //좋아요 취소
+            Route::patch('/','LikeController@likePost');    //좋아요
+            Route::delete('/','LikeController@unlikePost'); //좋아요 취소
         });
     });
 });
@@ -49,3 +50,7 @@ Route::get('/login/{provider}','SocialController@execute');
 
 //Callback URL
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
+
+//검색
+
+Route::get('/search/post','SearchController@search');

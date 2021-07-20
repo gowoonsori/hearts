@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PostControllerTest extends TestCase
@@ -16,7 +17,6 @@ class PostControllerTest extends TestCase
         $userId = 1;
         $postId = 1;
         $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
-        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.content', "문구 샘플1")
@@ -79,9 +79,10 @@ class PostControllerTest extends TestCase
             "search" => true,
             "category_id" => 1,
             "tags" => [
-                "샘플 tag1", "샘플 tag2"
+                "마우스"
             ]
         ]);
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.content', "문구 샘플2")
@@ -150,6 +151,7 @@ class PostControllerTest extends TestCase
     {
         $userId = 12345678;
         $response = $this->getJson('/user/' . $userId . '/post/all');
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response', null);

@@ -1,7 +1,9 @@
 <?php
 
+
 namespace Tests\Feature\ControllerTests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CategoryControllerTest extends TestCase
@@ -32,9 +34,7 @@ class CategoryControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertSee('id')
-            ->assertSee('title')
-            ->assertSee('created_at')
-            ->assertSee('updated_at');
+            ->assertSee('title');
     }
 
     /**

@@ -3,6 +3,7 @@
 
 namespace ControllerTests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -29,6 +30,28 @@ class LikeControllerTest extends TestCase
                 'response' => [
                     'id','content','total_like','share_cnt','visit_cnt','search','created_at',
                     'updated_at','user_id','category_id','tags'
+                ]
+            ]);
+    }
+
+    /**
+     * 내가 좋아요한 문구 검색 성공 테스트
+     * @test
+     * @return void
+     */
+    public function getMyLikePostsSuccessTest()
+    {
+        $userId = 1;
+        $response = $this->getJson('/user/' . $userId . '/post/like');
+        $response->assertStatus(200)
+            ->assertJsonPath('success',true)
+            ->assertJsonStructure([
+                "success",
+                "response" => [
+                    '0'=> [
+                        'id','content','total_like','share_cnt','visit_cnt',
+                        'search','created_at','updated_at','user_id','category_id','tags'
+                    ]
                 ]
             ]);
     }
@@ -127,4 +150,6 @@ class LikeControllerTest extends TestCase
             ->assertJsonPath('response.status',404)
             ->assertJsonPath('response.message','존재하지 않은 문구입니다.');
     }
+
+
 }
