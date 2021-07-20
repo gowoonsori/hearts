@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Laravel\Scout\Searchable;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory,Searchable;
 
     public $timestamps = false;
 
@@ -22,6 +23,34 @@ class Post extends Model
         'user_id',
         'category_id',
     ];
+
+    protected $hidden = ['pivot'];
+
+    public function toSearchableArray (): array {
+        $array = $this->toArray();
+        $tags = $this->tags->toArray();
+        //$array['tags'] = json_encode($tags) ;
+        $tagInfo = '';
+        foreach ($tags as $tag){
+            $tagInfo = $tagInfo . ' , ' . $tag['title'];
+        }
+        $array['tags'] = $tagInfo;
+        return array(
+            'id' => $array['id'],
+            'content' => $array['content'],
+            'total_like' => $array['total_like'],
+            'share_cnt' => $array['share_cnt'],
+            'visit_cnt' => $array['visit_cnt'],
+            'user_id' => $array['user_id'],
+            'category_id' => $array['category_id'],
+            'tags' => $array['tags']
+        );
+    }
+
+    public function shouldBeSearchable()
+    {
+        return $this->search;
+    }
 
     public function user(): BelongsTo
     {

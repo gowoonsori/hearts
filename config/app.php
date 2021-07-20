@@ -177,6 +177,9 @@ return [
 
         //oauth
         \SocialiteProviders\Manager\ServiceProvider::class,
+
+        //scout
+        TeamTNT\Scout\TNTSearchScoutServiceProvider::class,
     ],
 
     /*
