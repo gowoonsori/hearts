@@ -25,7 +25,7 @@ class Category extends Model
     ];
 
     public  function  toSearchableArray (): array {
-        return  $this ->withoutRelations()->toArray ();
+        return  $this ->withoutRelations()->toArray();
     }
 
     public function users(): BelongsToMany

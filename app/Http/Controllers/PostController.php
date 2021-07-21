@@ -108,7 +108,10 @@ class PostController extends Controller
             $tags = $this->tagService->createTag($tagsRequest);
             $this->postService->connectWithTags($post, $tags);
         }
-        $post->searchable();
+
+        //검색노출 여부 파악후 검색엔진 index에 등록
+        if($post->search) $post->searchable();
+
         //tag 정보까지 지연로딩 후 반환
         return ApiUtils::success($post->load('tags'));
     }

@@ -29,7 +29,6 @@ class Post extends Model
     public function toSearchableArray (): array {
         $array = $this->toArray();
         $tags = $this->tags->toArray();
-        //$array['tags'] = json_encode($tags) ;
         $tagInfo = '';
         foreach ($tags as $tag){
             $tagInfo = $tagInfo . ' , ' . $tag['title'];
@@ -38,11 +37,6 @@ class Post extends Model
         return array(
             'id' => $array['id'],
             'content' => $array['content'],
-            'total_like' => $array['total_like'],
-            'share_cnt' => $array['share_cnt'],
-            'visit_cnt' => $array['visit_cnt'],
-            'user_id' => $array['user_id'],
-            'category_id' => $array['category_id'],
             'tags' => $array['tags']
         );
     }

@@ -52,5 +52,4 @@ Route::get('/login/{provider}','SocialController@execute');
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
 
 //검색
-
-Route::get('/search/post','SearchController@search');
+Route::get('/search','SearchController@search');
