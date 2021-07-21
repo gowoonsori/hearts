@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\ControllerTests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 
 class UserControllerTest extends TestCase
 {
+    use DatabaseTransactions,WithoutMiddleware;
     /**
      * User 정보 get 성공 테스트
      * @test
@@ -14,8 +16,13 @@ class UserControllerTest extends TestCase
      */
     public function getUserInfoSuccess()
     {
+        //given
         $userId = 1;
+
+        //when
         $response = $this->getJson('/user/' . $userId);
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.name','홍의성')
@@ -32,8 +39,13 @@ class UserControllerTest extends TestCase
      */
     public function getUserInfoFailTest1()
     {
+        //given
         $userId = 482819;
+
+        //when
         $response = $this->getJson('/user/' . $userId);
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)

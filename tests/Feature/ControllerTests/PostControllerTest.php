@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\ControllerTests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class PostControllerTest extends TestCase
 {
+    use DatabaseTransactions,ControllerTestUtil;
+
     /**
      * 문구 id로 문구 조회 성공 테스트
      * @test
@@ -14,14 +16,17 @@ class PostControllerTest extends TestCase
      */
     public function getPostByPostIdSuccessTest()
     {
+        //given
         $userId = 1;
-        $postId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertJsonPath('response.content', "문구 샘플1")
-            ->assertJsonPath('response.search', 0)
-            ->assertJsonPath('response.category_id', 1)
+            ->assertJsonPath('response.content', "문구 테스트")
             ->assertJsonPath('response.user_id', 1)
             ->assertJsonStructure([
                 'success','response' => [
@@ -39,10 +44,14 @@ class PostControllerTest extends TestCase
      */
     public function getPostByPostIdFailTestNotExistId()
     {
+        //given
         $userId = 1;
         $postId = rand() . rand(0,1000);
 
+        //when
         $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
@@ -56,10 +65,15 @@ class PostControllerTest extends TestCase
      */
     public function getPostByPostIdFailTestNotSearchPost()
     {
+        //given
         $userId = 10;
-        $postId = 1;
+        $createUserId = 1;
+        $postId = $this->createPost($createUserId,false);
 
+        //when
         $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+
+        //then
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)
@@ -73,21 +87,26 @@ class PostControllerTest extends TestCase
      */
     public function createPostSuccessTest()
     {
+        //given
         $userId = 1;
+        $categoryId = $this->createCategory($userId);
+
+        //when
         $response = $this->postJson('/user/' . $userId . '/post',[
             "content" => "문구 샘플2",
             "search" => true,
-            "category_id" => 1,
+            "category_id" => $categoryId,
             "tags" => [
                 "마우스"
             ]
         ]);
-        $response->dump();
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.content', "문구 샘플2")
             ->assertJsonPath('response.search', true)
-            ->assertJsonPath('response.category_id', 1)
+            ->assertJsonPath('response.category_id', $categoryId)
             ->assertJsonPath('response.user_id', 1)
             ->assertJsonPath('response.total_like', 0)
             ->assertJsonPath('response.share_cnt', 0)
@@ -103,11 +122,16 @@ class PostControllerTest extends TestCase
      */
     public function createPostFailTest()
     {
+        //given
         $userId = 1;
+
+        //when
         $response = $this->postJson('/user/' . $userId . '/post',[
             "content" => "문구 샘플2",
             "search" => true
         ]);
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status', 404)
@@ -121,24 +145,22 @@ class PostControllerTest extends TestCase
      */
     public function getPostsSuccessTest()
     {
+        //given
         $userId = 1;
+        $this->createPost($userId);
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/all');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure(['success',
                 'response'=> [
                     '0' => [
-                        'id',
-                        'content',
-                        'total_like',
-                        'share_cnt',
-                        'visit_cnt',
-                        'search',
-                        'created_at',
-                        'updated_at',
-                        'user_id',
-                        'category_id',
-                        'tags']
+                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
+                    ]
             ]]);
     }
 
@@ -149,9 +171,13 @@ class PostControllerTest extends TestCase
      */
     public function getPostsSuccessTestNull()
     {
+        //given
         $userId = 12345678;
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/all');
-        $response->dump();
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response', null);
@@ -164,8 +190,13 @@ class PostControllerTest extends TestCase
      */
     public function getPostsFailTest()
     {
+        //given
         $userId = 132421;
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/all');
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
@@ -179,25 +210,23 @@ class PostControllerTest extends TestCase
      */
     public function getPostsByCategorySuccessTest()
     {
+        //given
         $userId = 1;
-        $categoryId = 1;
+        $categoryId = $this->createCategory($userId);
+        $this->createPostWithCategoryId($userId,$categoryId);
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/category/' . $categoryId);
+
+//      //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure(['success',
                 'response'=> [
                     '0' => [
-                        'id',
-                        'content',
-                        'total_like',
-                        'share_cnt',
-                        'visit_cnt',
-                        'search',
-                        'created_at',
-                        'updated_at',
-                        'user_id',
-                        'category_id',
-                        'tags']
+                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
+                    ]
                 ]]);
     }
 
@@ -208,9 +237,14 @@ class PostControllerTest extends TestCase
      */
     public function getPostsByCategorySuccessTestNull()
     {
+        //given
         $userId = 1;
         $categoryId = 12;
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/category/' . $categoryId);
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response',null);
@@ -224,24 +258,23 @@ class PostControllerTest extends TestCase
      */
     public function updateShareCountSuccessTest()
     {
-        $postId = 1;
+        //given
+        $userId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
         $response = $this->patchJson( '/post/' . $postId . '/share');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
+            ->assertJsonPath('response.share_cnt', 1)
             ->assertJsonStructure(['success',
                 'response'=> [
-                        'id',
-                        'content',
-                        'total_like',
-                        'share_cnt',
-                        'visit_cnt',
-                        'search',
-                        'created_at',
-                        'updated_at',
-                        'user_id',
-                        'category_id',
-                        'tags']
-                ]);
+                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
+                ]
+            ]);
     }
 
     /**
@@ -251,8 +284,13 @@ class PostControllerTest extends TestCase
      */
     public function updateShareCountFailTest()
     {
+        //given
         $postId = 2;
+
+        //when
         $response = $this->patchJson('/post/' . $postId . '/share');
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)

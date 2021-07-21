@@ -3,11 +3,14 @@
 
 namespace Tests\Feature\ControllerTests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 
 class CategoryControllerTest extends TestCase
 {
+    use DatabaseTransactions,WithoutMiddleware,ControllerTestUtil;
+
     /**
      * 사용자의 카테고리 모두 조회 성공 테스트 (category가 없을때)
      * @test
@@ -15,8 +18,13 @@ class CategoryControllerTest extends TestCase
      */
     public function getUserCategoriesSuccessNoCategory()
     {
+        //given
         $userId = 12345678;
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/category');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response','null');
@@ -29,8 +37,16 @@ class CategoryControllerTest extends TestCase
      */
     public function getUserCategoriesSuccessExistCategories()
     {
+        //given
         $userId = 1;
+        $title = "테스트 카테고리";
+        $this->createCategory($userId,$title);
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/category');
+
+        //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertSee('id')
@@ -44,8 +60,13 @@ class CategoryControllerTest extends TestCase
      */
     public function getUserInfoFailTest1()
     {
+        //given
         $userId = 482819 . rand(0,10000);
+
+        //when
         $response = $this->getJson('/user/' . $userId);
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
@@ -60,12 +81,16 @@ class CategoryControllerTest extends TestCase
      */
     public function createCategorySuccess()
     {
+        //given
         $userId = 1;
-        $title = "카테고리 샘플" . rand() . rand(0,10000);
+        $title = "테스트 카테고리";
 
+        //when
         $response = $this->postJson('/user/' . $userId . '/category',[
             'title' => $title
         ]);
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.title',$title)
@@ -73,18 +98,23 @@ class CategoryControllerTest extends TestCase
     }
 
     /**
-     * 사용자의 카테고리 생성 실패 테스트
+     * 사용자의 카테고리 생성 실패 테스트 | 이미 존재하는 카테고리
      * @test
      * @return void
      */
     public function createCategoryFailTestDuplicateTitle()
     {
+        //given
         $userId = 1;
-        $title = "카테고리 샘플1";
+        $title = "테스트 카테고리";
+        $this->createCategory($userId,$title);
 
+        //when
         $response = $this->postJson('/user/' . $userId . '/category',[
             'title' => $title
         ]);
+
+        //then
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)

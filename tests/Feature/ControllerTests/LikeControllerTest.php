@@ -3,16 +3,12 @@
 
 namespace ControllerTests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/*
- * 현재 DB가 각 테스트마다 지워지지 않아서 테스트마다 의존성이 생겨 단위테스트시 실패할 경우 존재
- * 순서대로(통합테스트로) 실행해야함
- *
- * */
 class LikeControllerTest extends TestCase
 {
+    use DatabaseTransactions;
     /**
      * 문구 좋아요 성공 테스트
      * @test
