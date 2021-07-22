@@ -26,22 +26,21 @@ class PostRepository
     }
 
     /**
-     * @param array $postData
-     * @param integer $userId
      * @return User|Model
      * @throws InternalServerException
      */
-    public function insert(array $postData,int $userId){
+    public function insert( $post){
         $nowDt = now();
         try {
             return $this->post->create([
-                'content' => $postData['content'],
-                'total_like' => 0,
-                'share_cnt' => 0,
-                'visit_cnt' => 0,
-                'search' => $postData['search'],
-                'user_id' => $userId,
-                'category_id' => $postData['category_id'],
+                'content' => $post['content'],
+                'total_like' => $post['total_like'],
+                'share_cnt' => $post['share_cnt'],
+                'visit_cnt' => $post['visit_cnt'],
+                'search' => $post['search'],
+                'user_id' => $post['user_id'],
+                'category_id' => $post['category_id'],
+                'tags' => $post['tags'],
                 'created_at' => $nowDt,
                 'updated_at' => $nowDt,
             ]);
@@ -68,41 +67,6 @@ class PostRepository
     }
 
     /**
-     * 특정 id의 문구 조회
-     * @param integer $id
-     * @return Builder|Builder[]|Collection|Model|null
-     * @throws InternalServerException
-     */
-    public function findByIdWithTags(int $id)
-    {
-        try{
-           return $this->post->with('tags')->find($id);
-        }catch (QueryException $e){
-            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
-        }
-    }
-
-    /**
-     * 특정 id의 문구 조회 raw query로 post와 tag한번에 조회
-     * @param integer $id
-     * @return \Illuminate\Support\Collection
-     * @throws InternalServerException
-     */
-    public function findByIdWithTagsRaw(int $id): \Illuminate\Support\Collection
-    {
-        try{
-            return DB::table('posts')
-                ->select('posts.*', 'tags.id AS tag_id','tags.title AS tag_title')
-                ->join('post_tag','posts.id','=','post_tag.post_id')
-                ->join('tags','post_tag.tag_id','=','tags.id')
-                ->where(['posts.id' => $id])->get();
-        }catch (QueryException $e){
-            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
-        }
-    }
-
-
-    /**
      * Category로 자신의 문구 조회
      * @param integer $userId
      * @param integer $categoryId
@@ -112,7 +76,7 @@ class PostRepository
     public function findMyPostsByCategories(int $userId,int $categoryId)
     {
         try{
-            $posts = $this->post->with('tags')->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
+            $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
             if(empty($posts->all())) return [];
             return $posts;
         }catch (QueryException $e){
@@ -128,7 +92,7 @@ class PostRepository
      */
     public function findAll($userId){
         try{
-            $posts = $this->post->with('tags')->where(['user_id'=>$userId])->get();
+            $posts = $this->post->where(['user_id'=>$userId])->get();
             if(empty($posts->all())){
                 return [];
             }

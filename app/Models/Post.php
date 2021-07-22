@@ -22,22 +22,21 @@ class Post extends Model
         'search',
         'user_id',
         'category_id',
+        'tags',
+    ];
+
+    protected $casts = [
+        'tags' => 'array'
     ];
 
     protected $hidden = ['pivot'];
 
     public function toSearchableArray (): array {
         $array = $this->toArray();
-        $tags = $this->tags->toArray();
-        $tagInfo = '';
-        foreach ($tags as $tag){
-            $tagInfo = $tagInfo . ' , ' . $tag['title'];
-        }
-        $array['tags'] = $tagInfo;
         return array(
             'id' => $array['id'],
             'content' => $array['content'],
-            'tags' => $array['tags']
+            'tags' => json_encode( $array['tags'], JSON_UNESCAPED_UNICODE)
         );
     }
 
@@ -59,10 +58,5 @@ class Post extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class,'category_id');
-    }
-
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class,'post_tag');
     }
 }

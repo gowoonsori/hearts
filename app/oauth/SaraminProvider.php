@@ -3,6 +3,7 @@
 
 namespace App\Oauth;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Arr;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
@@ -49,7 +50,7 @@ class SaraminProvider extends AbstractProvider
 
     /**
      * {@inheritdoc}
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     protected function getUserByToken($token)
     {

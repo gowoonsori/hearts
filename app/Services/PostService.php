@@ -9,32 +9,32 @@ use App\Exceptions\NotFoundException;
 use App\Models\Post;
 use App\Models\User;
 use App\Repositories\PostRepository;
-use App\Repositories\PostTagRepository;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class PostService
 {
     private $postRepository;
-    private $postTagRepository;
 
 
-    public function __construct(PostRepository $postRepository, PostTagRepository $postTagRepository)
+    public function __construct(PostRepository $postRepository,)
     {
         $this->postRepository = $postRepository;
-        $this->postTagRepository = $postTagRepository;
+    }
+
+    public function createPost($post){
+        return $this->postRepository->insert($post);
     }
 
     /**
      * @param integer $postId
-     * @return Builder|Builder[]|\Illuminate\Database\Eloquent\Collection|Model
+     * @return Model
      * @throws InternalServerException
      * @throws NotFoundException
      */
-    public function getPostById(int $postId)
+    public function getPostById(int $postId): Model
     {
-        $post =  $this->postRepository->findByIdWithTags($postId);
+        $post =  $this->postRepository->findById($postId);
         if(empty($post)){
             throw new NotFoundException('존재하지 않은 문구입니다.');
         }
@@ -63,23 +63,6 @@ class PostService
         if(empty($posts)) $posts = null;
         return $posts;
     }
-
-
-    /**
-     * 문구와 Tag 연결 관계 맺어주는 함수
-     * @param Post $post
-     * @param Collection $tags
-     */
-    public function connectWithTags(Post $post, Collection $tags){
-        $tagList = [];
-        foreach($tags->all() as $tag){
-            array_push($tagList,[
-                'tag_id'=>$tag->id
-            ]);
-        }
-        $this->postTagRepository->insert($post,$tagList);
-    }
-
 
     /**
      * @param Post $post
@@ -132,6 +115,19 @@ class PostService
         $post->share_cnt += 1;
         return $post->save();
     }
+
+    /**
+     *
+     * */
+    public function updatePost($post,$postDto){
+        $post->content = $postDto->content;
+        $post->search = $postDto->search;
+        $post->category_id = $postDto->category_id;
+        $post->tags = $postDto->tags;
+
+        return $post->save();
+    }
+
 
     /**
      * @return void

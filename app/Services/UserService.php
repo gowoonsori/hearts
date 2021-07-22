@@ -54,6 +54,6 @@ class UserService
      * */
     public function getLikePosts(User $user): Collection
     {
-        return $user->likes()->with('tags')->get();
+        return $user->likes()->get();
     }
 }
