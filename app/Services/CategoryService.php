@@ -24,6 +24,7 @@ class CategoryService
 
 
     /**
+     * User 정보로 카테고리 모두 가져오는 메서드
      * @param User $user
      * @return Collection | string
      * */
@@ -37,6 +38,7 @@ class CategoryService
     }
 
     /**
+     * 카테고리 이름으로 카테고리 조회 메서드
      * @param string $title
      * @return Category|null
      */
@@ -54,20 +56,40 @@ class CategoryService
     }
 
     /**
+     * User 가 특정 카테고리를 가지고 있는지 확인하는 메서드
      * @param integer $userId
      * @param integer $categoryId
-     * @return Model|Object|null
+     * @return false|Model|Object
      */
-    public function haveCategory(int $userId, int $categoryId){
-        return $this->userCategoryRepository->haveCategory($userId,$categoryId);
+    public function haveCategory(int $userId, int $categoryId)
+    {
+        $category =  $this->userCategoryRepository->findByUserIdAndCategoryId($userId,$categoryId);
+        if(empty($category))return false;
+        return $category;
     }
 
     /**
-     * @param Category $category
-     * @param User $user
+     * 카테고리와 사용자간의 연관관계 수정 메서드
      * @return void
      * */
-    public function connectWithUser(Category $category,User $user){
-        $category->users()->save($user);
+    public function updateCategoryConnect(int $id, int $categoryId){
+        $this->userCategoryRepository->update($id, $categoryId);
+    }
+
+    /**
+     * 카테고리와 사용자간의 연관관계 맺는 메서드
+     * @return void
+     * */
+    public function attachWithUser(int $categoryId, int $userId){
+        $this->userCategoryRepository->insert($categoryId,$userId);
+    }
+
+    /**
+     * 카테고리와 사용자간의 연관관계 삭제 메서드
+     * @param int $id
+     * @return void
+     */
+    public function detachWithUser(int $id){
+        $this->userCategoryRepository->deleteById($id);
     }
 }

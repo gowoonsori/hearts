@@ -296,4 +296,71 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.status',404)
             ->assertJsonPath('response.message','존재하지 않은 문구입니다.');
     }
+
+    /**
+     * 문구 삭제 성공 테스트
+     * @test
+     * @return void
+     */
+    public function deletePostSuccessTest()
+    {
+        //given
+        $userId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
+        $response = $this->deleteJson('/user/' . $userId . '/post?postId=' . $postId);
+
+        //then
+        $response->assertStatus(200)
+            ->assertJsonPath('success',true)
+            ->assertJsonPath('response',true)
+            ->assertJsonStructure(['success', 'response']);
+        $this->getJson('/user/' . $userId . '/post?postId=' . $postId)
+            ->assertStatus(404)
+            ->assertJsonPath('response.message','존재하지 않은 문구입니다.');
+    }
+
+    /**
+     * 문구 삭제 실패 테스트 | 쿼리 파라미터 존재 x
+     * @test
+     * @return void
+     */
+    public function deletePostFailTestNotExistQueryParameter()
+    {
+        //given
+        $userId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
+        $response = $this->deleteJson('/user/' . $userId . '/post?');
+
+        //then
+        $response->assertStatus(400)
+            ->assertJsonPath('success',false)
+            ->assertJsonPath('response.status',400)
+            ->assertJsonPath('response.message','잘못된 요청입니다.');
+    }
+
+    /**
+     * 문구 삭제 실패 테스트 | 자기 문구가 아닌경우
+     * @test
+     * @return void
+     */
+    public function deletePostFailTestForbidden()
+    {
+        //given
+        $createUserId = 1;
+        $userId = 13231231;
+        $postId = $this->createPost($createUserId);
+
+        //when
+        $response = $this->deleteJson('/user/' . $userId . '/post?postId=' . $postId);
+
+        //then
+        $response->assertStatus(403)
+            ->assertJsonPath('success',false)
+            ->assertJsonPath('response.status',403)
+            ->assertJsonPath('response.message','잘못된 접근입니다.');
+    }
 }

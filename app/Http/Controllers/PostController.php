@@ -6,8 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Dtos\PostDto;
 use App\Exceptions\BadRequestException;
+use App\Exceptions\ForbiddenException;
 use App\Exceptions\InternalServerException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\UnauthorizeException;
 use App\Services\PostService;
 use App\Services\TagService;
 use App\Services\UserService;
@@ -44,10 +46,8 @@ class PostController extends Controller
         //validate
         $postId = $request->query('postId');
 
-
+        //post 조회
         $post = $this->postService->getPostById($postId);
-        // id가 존재하지 않는 경우
-
 
         //문구가 검색 불가 설정인데 자기 문구가 아닌 경우
         if(!$post->search && $post->user_id != $userId){
@@ -131,5 +131,29 @@ class PostController extends Controller
         if(!$success) throw new InternalServerException('update도중 오류가 발생했습니다.');
 
         return ApiUtils::success($post);
+    }
+
+    /**
+     * 문구 삭제
+     * @param Request $request
+     * @return JsonResponse
+     * @throws BadRequestException
+     * @throws ForbiddenException
+     */
+    function deletePost(Request $request,int $userId) : JsonResponse
+    {
+        $postId = $request->query('postId');
+        if (empty($postId)) {
+            throw new BadRequestException('잘못된 요청입니다.');
+        }
+
+        //삭제할 문구가있는지 조회
+        $post = $this->postService->getPostById($postId);
+        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
+
+        //삭제
+        $this->postService->deletePost($post);
+
+        return ApiUtils::success(true);
     }
 }

@@ -132,4 +132,11 @@ class PostService
         $post->share_cnt += 1;
         return $post->save();
     }
+
+    /**
+     * @return void
+     * */
+    public function deletePost($post){
+        $post->delete();
+    }
 }

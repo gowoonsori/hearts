@@ -36,4 +36,13 @@ trait ControllerTestUtil{
         ]);
         return json_decode($post->getContent())->response->id;
     }
+
+    /**
+     * @param int $userId
+     * @param int $postId
+     * @return void
+     * */
+    public function likePost(int $userId, int $postId) {
+        $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+    }
 }

@@ -4,7 +4,7 @@
 namespace App\Repositories;
 
 
-interface ElequentRepository{
+interface EloquentRepository{
     /**
      * @param $idx
      * @return mixed

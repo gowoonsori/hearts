@@ -49,7 +49,7 @@ class SocialController extends Controller
    protected function redirectToProvider(string $provider): \Symfony\Component\HttpFoundation\RedirectResponse
    {
        switch ($provider){
-           case 'saramin' || 'naver':
+           case 'saramin':
                return Socialite::driver($provider)
                    ->redirect();
            default:

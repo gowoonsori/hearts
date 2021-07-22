@@ -4,11 +4,14 @@
 namespace ControllerTests;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\Feature\ControllerTests\ControllerTestUtil;
 use Tests\TestCase;
 
 class LikeControllerTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions,ControllerTestUtil;
+
+
     /**
      * 문구 좋아요 성공 테스트
      * @test
@@ -16,9 +19,14 @@ class LikeControllerTest extends TestCase
      */
     public function likePostSuccessTest()
     {
+        //when
         $userId = 1;
-        $postId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
         $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure([
@@ -37,8 +45,15 @@ class LikeControllerTest extends TestCase
      */
     public function getMyLikePostsSuccessTest()
     {
+        //given
         $userId = 1;
+        $postId = $this->createPost($userId);
+        $this->likePost($userId,$postId);
+
+        //when
         $response = $this->getJson('/user/' . $userId . '/post/like');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure([
@@ -59,9 +74,15 @@ class LikeControllerTest extends TestCase
      */
     public function likePostFailTestDuplicate()
     {
+        //given
         $userId = 1;
-        $postId = 1;
+        $postId = $this->createPost($userId);
+        $this->likePost($userId,$postId);
+
+        //when
         $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)
@@ -75,9 +96,14 @@ class LikeControllerTest extends TestCase
      */
     public function likePostFailTestNotExistPost()
     {
+        //given
         $userId = 1;
         $postId = 1234123541231;
+
+        //when
         $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
@@ -91,8 +117,12 @@ class LikeControllerTest extends TestCase
      */
     public function likePostFailTestImpossibleSearch()
     {
+        //given
+        $postUserId = 1;
+        $postId = $this->createPost($postUserId,false);
         $userId = 12345678;
-        $postId = 1;
+
+        //when
         $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
@@ -107,9 +137,15 @@ class LikeControllerTest extends TestCase
      */
     public function unlikePostSuccessTest()
     {
+        //given
         $userId = 1;
-        $postId = 1;
+        $postId = $this->createPost($userId);
+        $this->likePost($userId,$postId);
+
+        //when
         $response = $this->deleteJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response',true);
@@ -122,9 +158,14 @@ class LikeControllerTest extends TestCase
      */
     public function unlikePostFailTestNotLike()
     {
+        //given
         $userId = 1;
-        $postId = 1;
+        $postId = $this->createPost($userId);
+
+        //when
         $response = $this->deleteJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)
@@ -138,9 +179,14 @@ class LikeControllerTest extends TestCase
      */
     public function unlikePostFailTestNotExistPost()
     {
+        //given
         $userId = 1;
         $postId = 1234123541231;
+
+        //when
         $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+
+        //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
