@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
 
 Route::get('/', function (){
     return 'hello';
@@ -15,8 +14,9 @@ Route::get('/success',function(){
     return 'success';
 });
 
+
 //내 정보
-Route::prefix('user/{userId}')->group(function(){
+Route::prefix('user')->group(function(){
     //개인 정보 조회
     Route::get('/','UserController@get');
 
@@ -56,4 +56,6 @@ Route::get('/login/{provider}','SocialController@execute');
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
 
 //검색
-Route::get('/search','SearchController@search');
+Route::get('/search','SearchController@search');        //통합 검색
+Route::get('/search/tag','SearchController@tagSearch');  //태그로 검색
+Route::get('/search/post','SearchController@contentSearch'); //문구내용으로 검색

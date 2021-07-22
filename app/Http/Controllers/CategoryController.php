@@ -12,6 +12,7 @@ use App\Services\UserService;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
@@ -29,14 +30,14 @@ class CategoryController extends Controller
      * 사용자의 카테고리 모두 조회하는 메서드
      *
      * @param Request $request
-     * @param string $userId
      * @return JsonResponse
-     * @throws NotFoundException
+     * @throws BadRequestException
      */
-    function getCategories(Request $request, string $userId): JsonResponse
+    function getCategories(Request $request): JsonResponse
     {
-        $user = $this->userService->getInfo($userId);
-
+        //User get
+        $user = Auth::user();
+        if(empty($user)) throw new BadRequestException('잘못된 요청입니다.');
         return ApiUtils::success($this->categoryService->getCategoriesByUser($user));
     }
 
@@ -45,13 +46,14 @@ class CategoryController extends Controller
      * 카테고리 생성 메서드
      *
      * @param Request $request
-     * @param string $userId
      * @return JsonResponse
      * @throws NotFoundException
      * @throws BadRequestException
      */
-    public function createCategory(Request $request, string $userId): JsonResponse
+    public function createCategory(Request $request): JsonResponse
     {
+        //User get
+        $user = Auth::user();
         //request body($title) validate
         $title = $request['title'];
         if (empty($title)) {
@@ -66,7 +68,7 @@ class CategoryController extends Controller
             $category = $this->categoryService->createCategory($title);
         }else{
             //있다면 내가 가진 카테고리인지 확인
-            $isMyCategory = $this->categoryService->haveCategory($userId,$category->id);
+            $isMyCategory = $this->categoryService->haveCategory($user->id,$category->id);
             if($isMyCategory){
                 throw new BadRequestException('이미 존재하는 카테고리입니다.');
             }
@@ -74,7 +76,7 @@ class CategoryController extends Controller
 
         //user 와의 연관관계 설정
         if (empty($isMyCategory) && $category->users()) {
-            $this->categoryService->attachWithUser($category->id,$userId);
+            $this->categoryService->attachWithUser($category->id,$user->id);
         }
 
         return ApiUtils::success($category);
@@ -83,12 +85,14 @@ class CategoryController extends Controller
     /**
      * 카테고리 수정 메서드
      * @param Request $request
-     * @param string $userId
      * @return JsonResponse
      * @throws BadRequestException
      */
-    public function updateCategory(Request $request, string $userId): JsonResponse
+    public function updateCategory(Request $request): JsonResponse
     {
+        //User get
+        $user = Auth::user();
+
         //query Parameter - 수정할 카테고리 id
         $categoryId = $request->query('categoryId');
         $title = $request['title'];
@@ -97,7 +101,7 @@ class CategoryController extends Controller
         }
 
         //수정할 카테고리가 존재하는지 확인
-        $beforeCategory = $this->categoryService->haveCategory($userId,$categoryId);
+        $beforeCategory = $this->categoryService->haveCategory($user->id,$categoryId);
         if (!$beforeCategory) {
             //없다면 예외 발생
             throw new BadRequestException('카테고리가 존재하지 않습니다.');
@@ -119,12 +123,14 @@ class CategoryController extends Controller
     /**
      * 카테고리 삭제 메서드
      * @param Request $request
-     * @param string $userId
      * @return JsonResponse
      * @throws BadRequestException
      */
-    public function deleteCategory(Request $request, string $userId): JsonResponse
+    public function deleteCategory(Request $request): JsonResponse
     {
+        //User get
+        $user = Auth::user();
+
         //query Parameter - 수정할 카테고리 id
         $categoryId = $request->query('categoryId');
         if (empty($categoryId)) {
@@ -132,7 +138,7 @@ class CategoryController extends Controller
         }
 
         //수정할 카테고리가 존재하는지 확인
-        $category = $this->categoryService->haveCategory($userId,$categoryId);
+        $category = $this->categoryService->haveCategory($user->id,$categoryId);
         if (!$category) {
             //없다면 예외 발생
             throw new BadRequestException('카테고리가 존재하지 않습니다.');

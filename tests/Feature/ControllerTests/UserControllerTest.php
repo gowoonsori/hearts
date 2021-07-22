@@ -2,13 +2,16 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class UserControllerTest extends TestCase
 {
-    use DatabaseTransactions,WithoutMiddleware;
+    use DatabaseTransactions,WithoutMiddleware,ControllerTestUtil;
+
     /**
      * User 정보 get 성공 테스트
      * @test
@@ -17,38 +20,31 @@ class UserControllerTest extends TestCase
     public function getUserInfoSuccess()
     {
         //given
-        $userId = 1;
+        $this->storeUserToSession();
 
         //when
-        $response = $this->getJson('/user/' . $userId);
+        $response = $this->getJson('/user');
 
         //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertJsonPath('response.name','홍의성')
-            ->assertSee('created_at')
-            ->assertSee('updated_at');
-
-
+            ->assertJsonPath('response.name','홍의성');
     }
 
     /**
-     * User 정보 get 실패 테스트 / 없는 id
+     * User 정보 get테스트 / 없는 id
      * @test
      * @return void
      */
-    public function getUserInfoFailTest1()
+    public function getUserInfoTest()
     {
-        //given
-        $userId = 482819;
-
         //when
-        $response = $this->getJson('/user/' . $userId);
+        $response = $this->getJson('/user');
 
         //then
-        $response->assertStatus(404)
-            ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',404)
-            ->assertJsonPath('response.message','존재하지 않은 사용자입니다.');
+        $response->dump();
+        $response->assertStatus(200)
+            ->assertJsonPath('success',true)
+            ->assertJsonPath('response',null);
     }
 }

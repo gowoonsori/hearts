@@ -10,6 +10,7 @@ use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Repositories\UserRepository;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -22,13 +23,13 @@ class UserController extends Controller
 
     /**
      * @param Request $request
-     * @param integer $userId
      * @return JsonResponse
      * @throws NotFoundException
      */
-    function get(Request $request, int $userId) : JsonResponse
+    function get(Request $request) : JsonResponse
     {
-        return ApiUtils::success($this->userService->getInfo($userId));
+        $user = Auth::user();
+        return ApiUtils::success($user);
     }
 
 

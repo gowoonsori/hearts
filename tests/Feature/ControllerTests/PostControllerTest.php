@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class PostControllerTest extends TestCase
@@ -17,11 +19,12 @@ class PostControllerTest extends TestCase
     public function getPostByPostIdSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+        $response = $this->getJson('/user/post?postId=' . $postId);
+        $response->dump();
 
         //then
         $response->assertStatus(200)
@@ -45,11 +48,11 @@ class PostControllerTest extends TestCase
     public function getPostByPostIdFailTestNotExistId()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = rand() . rand(0,1000);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+        $response = $this->getJson('/user/post?postId=' . $postId);
 
         //then
         $response->assertStatus(404)
@@ -67,13 +70,16 @@ class PostControllerTest extends TestCase
     {
         //given
         $userId = 10;
-        $createUserId = 1;
-        $postId = $this->createPost($createUserId,false);
+        $createUserId = $this->storeUserToSession();
+        $postId = $this->createPost(false);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post?postId=' . $postId);
+        Auth::logout();
+        Auth::setUser(new User(['id' => $userId, 'name' => '테스트']));
+        $response = $this->getJson('/user/post?postId=' . $postId);
 
         //then
+        $response->dump();
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)
@@ -88,11 +94,11 @@ class PostControllerTest extends TestCase
     public function createPostSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $categoryId = $this->createCategory($userId);
 
         //when
-        $response = $this->postJson('/user/' . $userId . '/post',[
+        $response = $this->postJson('/user/post',[
             "content" => "문구 샘플2",
             "search" => true,
             "category_id" => $categoryId,
@@ -123,19 +129,20 @@ class PostControllerTest extends TestCase
     public function createPostFailTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
 
         //when
-        $response = $this->postJson('/user/' . $userId . '/post',[
+        $response = $this->postJson('/user/post',[
             "content" => "문구 샘플2",
             "search" => true
         ]);
 
         //then
-        $response->assertStatus(404)
+        $response->dump();
+        $response->assertStatus(400)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status', 404)
-            ->assertSee('message' );
+            ->assertJsonPath('response.status', 400)
+            ->assertSee('message','잘못된 요청입니다.' );
     }
 
     /**
@@ -146,11 +153,11 @@ class PostControllerTest extends TestCase
     public function getPostsSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $this->createPost($userId);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/all');
+        $response = $this->getJson('/user/post/all');
 
         //then
         $response->assertStatus(200)
@@ -172,12 +179,13 @@ class PostControllerTest extends TestCase
     public function getPostsSuccessTestNull()
     {
         //given
-        $userId = 12345678;
+        $userId = $this->storeUserToSession(12345678);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/all');
+        $response = $this->getJson('/user/post/all');
 
         //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response', null);
@@ -190,17 +198,14 @@ class PostControllerTest extends TestCase
      */
     public function getPostsFailTest()
     {
-        //given
-        $userId = 132421;
-
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/all');
+        $response = $this->getJson('/user/post/all');
 
         //then
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
-            ->assertJsonPath('response.message','존재하지 않은 사용자입니다.');
+            ->assertJsonPath('response.message','Attempt to read property "id" on null');
     }
 
     /**
@@ -211,14 +216,15 @@ class PostControllerTest extends TestCase
     public function getPostsByCategorySuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $categoryId = $this->createCategory($userId);
-        $this->createPostWithCategoryId($userId,$categoryId);
+        $this->createPostWithCategoryId($categoryId);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/category/' . $categoryId);
+        $response = $this->getJson('/user/post/category/' . $categoryId);
 
 //      //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure(['success',
@@ -238,11 +244,11 @@ class PostControllerTest extends TestCase
     public function getPostsByCategorySuccessTestNull()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $categoryId = 12;
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/category/' . $categoryId);
+        $response = $this->getJson('/user/post/category/' . $categoryId);
 
         //then
         $response->assertStatus(200)
@@ -259,13 +265,14 @@ class PostControllerTest extends TestCase
     public function updateShareCountSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
         $response = $this->patchJson( '/post/' . $postId . '/share');
 
         //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response.share_cnt', 1)
@@ -285,12 +292,14 @@ class PostControllerTest extends TestCase
     public function updateShareCountFailTest()
     {
         //given
+        $this->storeUserToSession();
         $postId = 2;
 
         //when
         $response = $this->patchJson('/post/' . $postId . '/share');
 
         //then
+
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
@@ -305,18 +314,18 @@ class PostControllerTest extends TestCase
     public function deletePostSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/post?postId=' . $postId);
+        $response = $this->deleteJson('/user/post?postId=' . $postId);
 
         //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonPath('response',true)
             ->assertJsonStructure(['success', 'response']);
-        $this->getJson('/user/' . $userId . '/post?postId=' . $postId)
+        $this->getJson('/user/post?postId=' . $postId)
             ->assertStatus(404)
             ->assertJsonPath('response.message','존재하지 않은 문구입니다.');
     }
@@ -329,11 +338,11 @@ class PostControllerTest extends TestCase
     public function deletePostFailTestNotExistQueryParameter()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/post?');
+        $response = $this->deleteJson('/user/post?');
 
         //then
         $response->assertStatus(400)
@@ -350,17 +359,65 @@ class PostControllerTest extends TestCase
     public function deletePostFailTestForbidden()
     {
         //given
-        $createUserId = 1;
+        $createUserId = $this->storeUserToSession();
         $userId = 13231231;
         $postId = $this->createPost($createUserId);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/post?postId=' . $postId);
+        Auth::logout();
+        Auth::setUser(new User(['id'=>$userId, 'name' => '테스트']));
+        $response = $this->deleteJson('/user/post?postId=' . $postId);
 
         //then
         $response->assertStatus(403)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',403)
             ->assertJsonPath('response.message','잘못된 접근입니다.');
+    }
+
+    /**
+     * 문구 등록 수정 테스트
+     * @test
+     * @return void
+     */
+    public function updatePostSuccessTest()
+    {
+        //given
+        $userId = $this->storeUserToSession();
+        $categoryId = $this->createCategory($userId);
+        $postId = $this->createPostWithCategoryId($categoryId);
+
+        //when
+        $response = $this->patchJson('/user/post?postId=' . $postId,
+            [
+            "content" => "수정 문구",
+            "search" => true,
+            "category_id" => $categoryId,
+            "tags" => [
+                "수정 태그"
+            ]
+        ]);
+
+        //then
+        $response->assertStatus(200)
+            ->assertJsonPath('success',true)
+            ->assertJsonStructure([
+                'success',
+                'response'=> [
+                    'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                    'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
+                ]
+            ]);
+        $this->getJson('/user/post?postId=' . $postId)
+            ->assertStatus(200)
+            ->assertJsonPath('success',true)
+            ->assertJsonPath('response.content', "수정 문구")
+            ->assertJsonPath('response.search', 1)
+            ->assertJsonPath('response.category_id', $categoryId)
+            ->assertJsonPath('response.user_id', 1)
+            ->assertJsonPath('response.total_like', 0)
+            ->assertJsonPath('response.share_cnt', 0)
+            ->assertJsonPath('response.visit_cnt', 0)
+            ->assertJsonPath('response.tags', ["수정 태그"]);
     }
 }

@@ -19,10 +19,10 @@ class CategoryControllerTest extends TestCase
     public function getUserCategoriesSuccessNoCategory()
     {
         //given
-        $userId = 12345678;
+        $userId = $this->storeUserToSession(32);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/category');
+        $response = $this->getJson('/user/category');
 
         //then
         $response->assertStatus(200)
@@ -38,12 +38,12 @@ class CategoryControllerTest extends TestCase
     public function getUserCategoriesSuccessExistCategories()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $title = "테스트 카테고리";
-        $this->createCategory($userId,$title);
+        $this->createCategory($title);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/category');
+        $response = $this->getJson('/user/category');
 
         //then
         $response->assertStatus(200)
@@ -57,19 +57,16 @@ class CategoryControllerTest extends TestCase
      * @test
      * @return void
      */
-    public function getUserInfoFailTest1()
+    public function getCategoryFailTest1()
     {
-        //given
-        $userId = 482819 . rand(0,10000);
-
         //when
-        $response = $this->getJson('/user/' . $userId);
+        $response = $this->getJson('/user/category');
 
         //then
-        $response->assertStatus(404)
+        $response->assertStatus(400)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',404)
-            ->assertJsonPath('response.message','존재하지 않은 사용자입니다.');
+            ->assertJsonPath('response.status',400)
+            ->assertJsonPath('response.message','잘못된 요청입니다.');
     }
 
 
@@ -81,11 +78,11 @@ class CategoryControllerTest extends TestCase
     public function createCategorySuccess()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $title = "테스트 카테고리";
 
         //when
-        $response = $this->postJson('/user/' . $userId . '/category',[
+        $response = $this->postJson('/user/category',[
             'title' => $title
         ]);
 
@@ -104,12 +101,12 @@ class CategoryControllerTest extends TestCase
     public function createCategoryFailTestDuplicateTitle()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $title = "테스트 카테고리";
-        $this->createCategory($userId,$title);
+        $this->createCategory($title);
 
         //when
-        $response = $this->postJson('/user/' . $userId . '/category',[
+        $response = $this->postJson('/user/category',[
             'title' => $title
         ]);
 
@@ -128,13 +125,13 @@ class CategoryControllerTest extends TestCase
     public function updateCategorySuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $title = "테스트 카테고리";
-        $categoryId = $this->createCategory($userId,$title);
+        $categoryId = $this->createCategory($title);
         $updateTitle = "수정한 카테고리";
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/category?categoryId=' . $categoryId,
+        $response = $this->patchJson('/user/category?categoryId=' . $categoryId,
         ['title' => $updateTitle]);
 
         //then
@@ -156,13 +153,13 @@ class CategoryControllerTest extends TestCase
     public function updateCategorySuccessFailNotExist()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $title = "테스트 카테고리";
         $categoryId = 139472673189;
         $updateTitle = "수정한 카테고리";
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/category?categoryId=' . $categoryId,
+        $response = $this->patchJson('/user/category?categoryId=' . $categoryId,
             ['title' => $updateTitle]);
 
         //then
@@ -180,12 +177,12 @@ class CategoryControllerTest extends TestCase
     public function updateCategorySuccessFailBadRequest()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $title = "테스트 카테고리";
         $categoryId = 139472673189;
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/category?categoryId=' . $categoryId);
+        $response = $this->patchJson('/user/category?categoryId=' . $categoryId);
 
         //then
         $response->assertStatus(400)
@@ -202,12 +199,12 @@ class CategoryControllerTest extends TestCase
     public function deleteCategorySuccessTest()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $title = "테스트 카테고리";
-        $categoryId = $this->createCategory($userId,$title);
+        $categoryId = $this->createCategory($title);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/category?categoryId=' . $categoryId);
+        $response = $this->deleteJson('/user/category?categoryId=' . $categoryId);
 
         //then
         $response->assertStatus(200)
@@ -227,12 +224,12 @@ class CategoryControllerTest extends TestCase
     public function deleteCategoryFailTestNotExistQueryParameter()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $title = "테스트 카테고리";
-        $categoryId = $this->createCategory($userId,$title);
+        $categoryId = $this->createCategory($title);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/category');
+        $response = $this->deleteJson('/user/category');
 
         //then
         $response->assertStatus(400)
@@ -249,11 +246,11 @@ class CategoryControllerTest extends TestCase
     public function deleteCategoryFailTestNotExistCategory()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $categoryId =1234232132412;
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/category?categoryId=' . $categoryId);
+        $response = $this->deleteJson('/user/category?categoryId=' . $categoryId);
 
         //then
         $response->assertStatus(400)

@@ -12,6 +12,7 @@ use App\Services\UserService;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LikeController extends Controller
 {
@@ -25,11 +26,14 @@ class LikeController extends Controller
     }
 
     /**
-     * @throws NotFoundException
+     * 좋아요 한 문구 조회
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getLikePosts(Request $request, int $userId): JsonResponse
+    public function getLikePosts(Request $request): JsonResponse
     {
-        $user = $this->userService->getInfo($userId);
+        //User get
+        $user = Auth::user();
         $posts = $this->userService->getLikePosts($user);
         return ApiUtils::success($posts);
     }
@@ -40,15 +44,19 @@ class LikeController extends Controller
      * @throws InternalServerException
      * @throws BadRequestException
      */
-    public function likePost(Request $request, int $userId, int $postId): JsonResponse
+    public function likePost(Request $request, int $postId): JsonResponse
     {
-        $user = $this->userService->getInfo($userId);
+        //User get
+        $user = Auth::user();
+        if(empty($user)) throw new BadRequestException('잘못된 요청입니다.');
+
+
         $post = $this->postService->getPostById($postId);
         $isLike = $this->postService->isLikePost($user,$post);
         if($isLike){
             throw new BadRequestException('이미 좋아요한 글 입니다.');
         }
-        if(!$post->search && $userId != $post->user_id){
+        if(!$post->search && $user->id != $post->user_id){
             throw new BadRequestException('잘못된 요청입니다.');
         }
         $post = $this->postService->updateLike($post, $user);
@@ -60,15 +68,16 @@ class LikeController extends Controller
      * @throws InternalServerException
      * @throws BadRequestException
      */
-    public function unlikePost(Request $request, int $userId, int $postId): JsonResponse
+    public function unlikePost(Request $request, int $postId): JsonResponse
     {
-        $user = $this->userService->getInfo($userId);
+        //User get
+        $user = Auth::user();
         $post = $this->postService->getPostById($postId);
         $isLike = $this->postService->isLikePost($user,$post);
         if(!$isLike){
             throw new BadRequestException('좋아요 하지 않은 글입니다.');
         }
-        if(!$post->search && $userId != $post->user_id){
+        if(!$post->search && $user->id != $post->user_id){
             throw new BadRequestException('잘못된 요청입니다.');
         }
         $post = $this->postService->deleteLike($post, $user);

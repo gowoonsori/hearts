@@ -4,6 +4,7 @@
 namespace ControllerTests;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Auth;
 use Tests\Feature\ControllerTests\ControllerTestUtil;
 use Tests\TestCase;
 
@@ -20,11 +21,11 @@ class LikeControllerTest extends TestCase
     public function likePostSuccessTest()
     {
         //when
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->patchJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(200)
@@ -46,14 +47,18 @@ class LikeControllerTest extends TestCase
     public function getMyLikePostsSuccessTest()
     {
         //given
-        $userId = 1;
-        $postId = $this->createPost($userId);
-        $this->likePost($userId,$postId);
+        $userId =  $this->storeUserToSession();
+        $categoryId = $this->createCategory();
+        $postId = $this->createPostWithCategoryId($categoryId);
+        $this->likePost($postId);
+        $postId = $this->createPostWithCategoryId($categoryId);
+        $this->likePost($postId);
 
         //when
-        $response = $this->getJson('/user/' . $userId . '/post/like');
+        $response = $this->getJson('/user/post/like');
 
         //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
             ->assertJsonStructure([
@@ -75,12 +80,12 @@ class LikeControllerTest extends TestCase
     public function likePostFailTestDuplicate()
     {
         //given
-        $userId = 1;
+        $userId =  $this->storeUserToSession();
         $postId = $this->createPost($userId);
-        $this->likePost($userId,$postId);
+        $this->likePost($postId);
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->patchJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(400)
@@ -97,11 +102,11 @@ class LikeControllerTest extends TestCase
     public function likePostFailTestNotExistPost()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = 1234123541231;
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->patchJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(404)
@@ -118,12 +123,16 @@ class LikeControllerTest extends TestCase
     public function likePostFailTestImpossibleSearch()
     {
         //given
-        $postUserId = 1;
-        $postId = $this->createPost($postUserId,false);
+        $postUserId = $this->storeUserToSession();
+        $postId = $this->createPost(false);
         $userId = 12345678;
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+        Auth::logout();
+        $response = $this->patchJson('/user/post/' . $postId . '/like');
+
+        //then
+        $response->dump();
         $response->assertStatus(400)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',400)
@@ -138,12 +147,12 @@ class LikeControllerTest extends TestCase
     public function unlikePostSuccessTest()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
-        $this->likePost($userId,$postId);
+        $this->likePost($postId);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->deleteJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(200)
@@ -159,11 +168,11 @@ class LikeControllerTest extends TestCase
     public function unlikePostFailTestNotLike()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->deleteJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->deleteJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(400)
@@ -180,11 +189,11 @@ class LikeControllerTest extends TestCase
     public function unlikePostFailTestNotExistPost()
     {
         //given
-        $userId = 1;
+        $userId = $this->storeUserToSession();
         $postId = 1234123541231;
 
         //when
-        $response = $this->patchJson('/user/' . $userId . '/post/' . $postId . '/like');
+        $response = $this->patchJson('/user/post/' . $postId . '/like');
 
         //then
         $response->assertStatus(404)
@@ -192,6 +201,4 @@ class LikeControllerTest extends TestCase
             ->assertJsonPath('response.status',404)
             ->assertJsonPath('response.message','존재하지 않은 문구입니다.');
     }
-
-
 }
