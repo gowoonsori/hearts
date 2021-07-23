@@ -53,6 +53,8 @@ class Handler extends ExceptionHandler
            $statusCode = 401;
        }else if($e instanceof ForbiddenException){
            $statusCode = 403;
+       }else if($e instanceof InternalServerException){
+           $statusCode = 500;
        }
 
         return ApiUtils::error($error,$statusCode);

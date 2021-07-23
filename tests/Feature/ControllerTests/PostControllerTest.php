@@ -69,21 +69,22 @@ class PostControllerTest extends TestCase
     public function getPostByPostIdFailTestNotSearchPost()
     {
         //given
-        $userId = 10;
         $createUserId = $this->storeUserToSession();
         $postId = $this->createPost(false);
+        Auth::logout();
+
+        $userId = $this->storeUserToSession(1231415320);
+
 
         //when
-        Auth::logout();
-        Auth::setUser(new User(['id' => $userId, 'name' => '테스트']));
         $response = $this->getJson('/user/post?postId=' . $postId);
 
         //then
         $response->dump();
-        $response->assertStatus(400)
+        $response->assertStatus(403)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',400)
-            ->assertJsonPath('response.message',"조회할 수 없는 문구 입니다.");
+            ->assertJsonPath('response.status',403)
+            ->assertJsonPath('response.message',"잘못된 접근입니다.");
     }
 
     /**
@@ -205,7 +206,7 @@ class PostControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJsonPath('success',false)
             ->assertJsonPath('response.status',404)
-            ->assertJsonPath('response.message','Attempt to read property "id" on null');
+            ->assertJsonPath('response.message','Unauthenticated.');
     }
 
     /**
@@ -360,12 +361,11 @@ class PostControllerTest extends TestCase
     {
         //given
         $createUserId = $this->storeUserToSession();
-        $userId = 13231231;
         $postId = $this->createPost($createUserId);
+        Auth::logout();
+        $userId = $this->storeUserToSession(1231415320);
 
         //when
-        Auth::logout();
-        Auth::setUser(new User(['id'=>$userId, 'name' => '테스트']));
         $response = $this->deleteJson('/user/post?postId=' . $postId);
 
         //then

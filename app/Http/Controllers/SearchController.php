@@ -21,6 +21,7 @@ class SearchController extends Controller
         $posts = null;
         if(!empty($keyword)) {
             $postIds = Post::search($keyword);
+
             //posts.index에 없다면 select쿼리 실행 x
             if(empty($postIds->keys()->all())) return ApiUtils::success(null);
             $posts = $postIds->get();
@@ -44,6 +45,7 @@ class SearchController extends Controller
         $posts = null;
         if(!empty($keyword)) {
             $postIds = Post::search($keyword)->whereIn('tags', [$keyword]);
+
             //posts.index에 없다면 select쿼리 실행 x
             if(empty($postIds->keys()->all())) return ApiUtils::success(null);
             $posts = $postIds->get();

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserRepository
 {
-    protected $user;
+    private User $user;
 
     public function __construct()
     {
@@ -20,22 +20,14 @@ class UserRepository
     }
 
     /**
-     * @param $socialData
-     * @return User|Model
+     * @param User $user
+     * @return bool
      * @throws InternalServerException
      */
-    public function insert($socialData){
-        $nowDt = now();
-
+    public function insert(User $user): bool
+    {
         try {
-            return $this->user->create([
-                'name' => $socialData->getName(),
-                'email' => $socialData->getEmail(),
-                'social_id' => $socialData->getId(),
-                'access_token' => $socialData->token,
-                'updated_at' => $nowDt,
-                'created_at' => $nowDt
-            ]);
+            return $user->save();
         } catch (QueryException $exception) {
             Log::error("Sign Up Fail Error Message: \n".$exception);
             throw new InternalServerException("사용자 등록중 오류가 발생했습니다.");
@@ -44,9 +36,10 @@ class UserRepository
 
     /**
      * @param $userMail
-     * @return User|bool|Collection
+     * @return User|bool
      */
-    public function findByEmail($userMail){
+    public function findByEmail($userMail): User|bool
+    {
         $user = $this->user->where('email', $userMail)->first();
         if(empty($user)){
             return false;
@@ -55,7 +48,7 @@ class UserRepository
     }
 
     /**
-     * Obtain the user information by data table idx.
+     * Obtain the user information by data table id
      * @param $id
      * @return User|bool|Collection|Model
      */
@@ -71,10 +64,11 @@ class UserRepository
     /**
      * Obtain the user information by User's gitub id.
      *
-     * @param $githubId
+     * @param $socialId
      * @return mixed
      */
-    public function findBySocialId( $socialId){
+    public function findBySocialId( $socialId): mixed
+    {
         $user = $this->user->where(['social_id' =>  $socialId])->first();
         if(empty($user)){
             Log::info('whereSocialId(): social id '. $socialId.' user is not found');
@@ -88,7 +82,8 @@ class UserRepository
      *
      * @return User[]|bool|Collection
      */
-    public function findAll(){
+    public function findAll(): Collection|array|bool
+    {
         $userList = $this->user->get();
         if(empty($userList)){
             Log::info('all(): user table is empty.');

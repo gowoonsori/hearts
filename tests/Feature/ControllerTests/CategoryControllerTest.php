@@ -63,10 +63,10 @@ class CategoryControllerTest extends TestCase
         $response = $this->getJson('/user/category');
 
         //then
-        $response->assertStatus(400)
+        $response->assertStatus(401)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',400)
-            ->assertJsonPath('response.message','잘못된 요청입니다.');
+            ->assertJsonPath('response.status',401)
+            ->assertJsonPath('response.message','인증되지 않은 사용자입니다.');
     }
 
 

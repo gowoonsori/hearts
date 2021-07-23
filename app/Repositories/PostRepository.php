@@ -4,21 +4,17 @@
 namespace App\Repositories;
 
 
-use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerException;
 use App\Models\Post;
 use App\Models\User;
-use http\Exception\BadQueryStringException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PostRepository
 {
-    protected $post;
+    protected Post $post;
 
     public function __construct()
     {

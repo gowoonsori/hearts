@@ -10,11 +10,12 @@ use App\Repositories\CategoryRepository;
 use App\Repositories\UserCategoryRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 
 class CategoryService
 {
-    private $categoryRepository;
-    private $userCategoryRepository;
+    private CategoryRepository $categoryRepository;
+    private UserCategoryRepository $userCategoryRepository;
 
     public function __construct(CategoryRepository $categoryRepository, UserCategoryRepository $userCategoryRepository)
     {
@@ -28,7 +29,7 @@ class CategoryService
      * @param User $user
      * @return Collection | string
      * */
-    public function getCategoriesByUser(User $user)
+    public function getCategoriesByUser(User $user): Collection|string
     {
         $categories = $user->categories()->get();
         if(empty($categories->all())){
@@ -47,11 +48,14 @@ class CategoryService
        return $this->categoryRepository->findByTitle($title);
     }
 
+
     /**
+     * 카테고리 생성 메서드
      * @param string $title
      * @return User|bool|Model
      */
-    public function createCategory(string $title){
+    public function createCategory(string $title): Model|User|bool
+    {
         return $this->categoryRepository->insert($title);
     }
 
@@ -59,7 +63,6 @@ class CategoryService
      * User 가 특정 카테고리를 가지고 있는지 확인하는 메서드
      * @param integer $userId
      * @param integer $categoryId
-     * @return false|Model|Object
      */
     public function haveCategory(int $userId, int $categoryId)
     {
@@ -70,6 +73,8 @@ class CategoryService
 
     /**
      * 카테고리와 사용자간의 연관관계 수정 메서드
+     * @param integer $id
+     * @param integer $categoryId
      * @return void
      * */
     public function updateCategoryConnect(int $id, int $categoryId){
@@ -78,6 +83,8 @@ class CategoryService
 
     /**
      * 카테고리와 사용자간의 연관관계 맺는 메서드
+     * @param integer $categoryId
+     * @param integer $userId
      * @return void
      * */
     public function attachWithUser(int $categoryId, int $userId){

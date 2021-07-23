@@ -125,10 +125,11 @@ class LikeControllerTest extends TestCase
         //given
         $postUserId = $this->storeUserToSession();
         $postId = $this->createPost(false);
-        $userId = 12345678;
+        Auth::logout();
+        
+        $userId = $this->storeUserToSession(12345678);
 
         //when
-        Auth::logout();
         $response = $this->patchJson('/user/post/' . $postId . '/like');
 
         //then

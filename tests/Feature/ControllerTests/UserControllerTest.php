@@ -32,7 +32,7 @@ class UserControllerTest extends TestCase
     }
 
     /**
-     * User 정보 get테스트 / 없는 id
+     * User 정보 get 실패 테스트 / 없는 id(세션)
      * @test
      * @return void
      */
@@ -43,8 +43,9 @@ class UserControllerTest extends TestCase
 
         //then
         $response->dump();
-        $response->assertStatus(200)
-            ->assertJsonPath('success',true)
-            ->assertJsonPath('response',null);
+        $response->assertStatus(401)
+            ->assertJsonPath('success',false)
+            ->assertJsonPath('response.status',401)
+            ->assertJsonPath('response.message','인증되지 않은 사용자입니다.');
     }
 }

@@ -5,37 +5,42 @@ namespace App\Http\Controllers;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerException;
 use App\Exceptions\UnauthorizeException;
-use App\Repositories\UserRepository;
+use App\Services\UserService;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialController extends Controller
 {
-    protected $userRepository;
+    private UserService $userService;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserService $userService)
     {
-        $this->userRepository = $userRepository;
+        $this->userService = $userService;
     }
 
     /**
-     * Handle social login process.
+     * Social login Handler
      *
      * @param Request $request
      * @param string $provider
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse|Redirector|RedirectResponse|Application
+     * @throws BadRequestException
+     * @throws InternalServerException
+     * @throws UnauthorizeException
      */
-   public function execute(Request $request, string $provider){
+   public function execute(Request $request, string $provider): \Symfony\Component\HttpFoundation\RedirectResponse|Redirector|RedirectResponse|Application
+   {
        //인증서버로 redirect
         if (! $request->has('code')){
             return $this->redirectToProvider($provider);
         }
 
-        //token을 가지고 있다면 token서버로 redirect
+        //token 을 가지고 있다면 token 서버로 redirect
        return $this->handleProviderCallback($provider);
    }
 
@@ -48,13 +53,11 @@ class SocialController extends Controller
      */
    protected function redirectToProvider(string $provider): \Symfony\Component\HttpFoundation\RedirectResponse
    {
-       switch ($provider){
-           case 'saramin':
-               return Socialite::driver($provider)
-                   ->redirect();
-           default:
-               throw new BadRequestException("잘못된 요청입니다.");
-       }
+       return match ($provider) {
+           'saramin' => Socialite::driver($provider)
+               ->redirect(),
+           default => throw new BadRequestException("잘못된 요청입니다."),
+       };
    }
 
     /**
@@ -65,7 +68,8 @@ class SocialController extends Controller
      * @throws UnauthorizeException
      * @throws InternalServerException
      */
-   protected function handleProviderCallback(string $provider){
+   protected function handleProviderCallback(string $provider): Redirector|RedirectResponse|Application
+   {
        $socialData = Socialite::driver($provider)->user();
        // 사용자 정보 조회 성공 여부 확인
        if (empty($socialData->token)) {
@@ -83,15 +87,15 @@ class SocialController extends Controller
 
        //사용자 등록 여부 확인
        $userMail = $socialData->getEmail();
-       $user = $this->userRepository->findByEmail($userMail);
+       $user = $this->userService->getUserByEmail($userMail);
 
        //사용자 추가
-       if( empty($user)){
-           $user = $this->userRepository->insert($socialData);
+       if(empty($user)){
+           $user = $this->userService->createUser($socialData);
            Log::info('Sign Up: ' . $socialData->getEmail());
        }
 
-       auth()->login($user);
+       Auth::login($user);
        Log::info('Sign in: ' . auth()->user()->name);
        return redirect('/success');
    }

@@ -6,16 +6,14 @@ namespace App\Repositories;
 
 use App\Models\Category;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CategoryRepository
 {
-    protected $category;
+    protected Category $category;
 
     public function __construct()
     {

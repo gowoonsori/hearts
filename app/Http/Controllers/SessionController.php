@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
 class SessionController extends Controller
@@ -19,9 +20,9 @@ class SessionController extends Controller
     /**
      * Sign out and destroy user's session data
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy()
+    public function destroy(): RedirectResponse
     {
         $username = auth()->user()->name;
         auth()->logout();

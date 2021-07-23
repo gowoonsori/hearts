@@ -35,6 +35,7 @@ return [
     |
     */
 
+    /*사용자가 각각의 요청마다 어떻게 인증되는지 정의*/
     'guards' => [
         'web' => [
             'driver' => 'session',

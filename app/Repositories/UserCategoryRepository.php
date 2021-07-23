@@ -6,7 +6,6 @@ namespace App\Repositories;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use PhpParser\Node\Expr\Cast\Object_;
 
 class UserCategoryRepository
 {
@@ -14,7 +13,6 @@ class UserCategoryRepository
      * fk를 이용해 조회
      * @param integer $userId
      * @param integer $categoryId
-     * @return Model | Object | null
      */
     function findByUserIdAndCategoryId(int $userId, int $categoryId)
     {
@@ -52,9 +50,9 @@ class UserCategoryRepository
      * 삽입
      * @param int $id
      * @param int $categoryId
-     * @return mixed
+     * @return int
      */
-    function update(int $id, int $categoryId)
+    function update(int $id, int $categoryId): int
     {
         return DB::table('user_category')
             ->where('id',$id)

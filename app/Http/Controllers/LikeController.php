@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\BadRequestException;
 use App\Exceptions\InternalServerException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\UnauthorizeException;
 use App\Services\PostService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
@@ -16,8 +17,8 @@ use Illuminate\Support\Facades\Auth;
 
 class LikeController extends Controller
 {
-    protected $userService;
-    protected $postService;
+    protected UserService $userService;
+    protected PostService $postService;
 
     public function __construct(UserService $userService,PostService $postService)
     {
@@ -29,11 +30,14 @@ class LikeController extends Controller
      * 좋아요 한 문구 조회
      * @param Request $request
      * @return JsonResponse
+     * @throws UnauthorizeException
      */
     public function getLikePosts(Request $request): JsonResponse
     {
         //User get
         $user = Auth::user();
+        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
         $posts = $this->userService->getLikePosts($user);
         return ApiUtils::success($posts);
     }
@@ -43,12 +47,13 @@ class LikeController extends Controller
      * @throws NotFoundException
      * @throws InternalServerException
      * @throws BadRequestException
+     * @throws UnauthorizeException
      */
     public function likePost(Request $request, int $postId): JsonResponse
     {
         //User get
         $user = Auth::user();
-        if(empty($user)) throw new BadRequestException('잘못된 요청입니다.');
+        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
 
         $post = $this->postService->getPostById($postId);
@@ -72,7 +77,12 @@ class LikeController extends Controller
     {
         //User get
         $user = Auth::user();
+        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
+        //문구 get
         $post = $this->postService->getPostById($postId);
+
+        //좋아요 상태인지 체크
         $isLike = $this->postService->isLikePost($user,$post);
         if(!$isLike){
             throw new BadRequestException('좋아요 하지 않은 글입니다.');
@@ -80,7 +90,9 @@ class LikeController extends Controller
         if(!$post->search && $user->id != $post->user_id){
             throw new BadRequestException('잘못된 요청입니다.');
         }
-        $post = $this->postService->deleteLike($post, $user);
+
+        //좋아요 취소
+        $post = $this->postService->deleteLike( $user, $post );
         return ApiUtils::success($post);
     }
 

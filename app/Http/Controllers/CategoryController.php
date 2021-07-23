@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
-use App\Repositories\CategoryRepository;
-use App\Repositories\UserCategoryRepository;
-use App\Repositories\UserRepository;
+use App\Exceptions\UnauthorizeException;
 use App\Services\CategoryService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
@@ -17,8 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
 {
-    protected $categoryService;
-    protected $userService;
+    protected CategoryService $categoryService;
+    protected UserService $userService;
 
     public function __construct(CategoryService $categoryService,UserService $userService)
     {
@@ -31,13 +29,14 @@ class CategoryController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
-     * @throws BadRequestException
+     * @throws UnauthorizeException
      */
     function getCategories(Request $request): JsonResponse
     {
         //User get
         $user = Auth::user();
-        if(empty($user)) throw new BadRequestException('잘못된 요청입니다.');
+        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
         return ApiUtils::success($this->categoryService->getCategoriesByUser($user));
     }
 
@@ -48,12 +47,14 @@ class CategoryController extends Controller
      * @param Request $request
      * @return JsonResponse
      * @throws NotFoundException
-     * @throws BadRequestException
+     * @throws BadRequestException|UnauthorizeException
      */
     public function createCategory(Request $request): JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
         //request body($title) validate
         $title = $request['title'];
         if (empty($title)) {
@@ -68,7 +69,7 @@ class CategoryController extends Controller
             $category = $this->categoryService->createCategory($title);
         }else{
             //있다면 내가 가진 카테고리인지 확인
-            $isMyCategory = $this->categoryService->haveCategory($user->id,$category->id);
+            $isMyCategory = $this->categoryService->haveCategory($userId,$category->id);
             if($isMyCategory){
                 throw new BadRequestException('이미 존재하는 카테고리입니다.');
             }
@@ -76,7 +77,7 @@ class CategoryController extends Controller
 
         //user 와의 연관관계 설정
         if (empty($isMyCategory) && $category->users()) {
-            $this->categoryService->attachWithUser($category->id,$user->id);
+            $this->categoryService->attachWithUser($category->id,$userId);
         }
 
         return ApiUtils::success($category);
@@ -87,11 +88,13 @@ class CategoryController extends Controller
      * @param Request $request
      * @return JsonResponse
      * @throws BadRequestException
+     * @throws UnauthorizeException
      */
     public function updateCategory(Request $request): JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
         //query Parameter - 수정할 카테고리 id
         $categoryId = $request->query('categoryId');
@@ -101,7 +104,7 @@ class CategoryController extends Controller
         }
 
         //수정할 카테고리가 존재하는지 확인
-        $beforeCategory = $this->categoryService->haveCategory($user->id,$categoryId);
+        $beforeCategory = $this->categoryService->haveCategory($userId,$categoryId);
         if (!$beforeCategory) {
             //없다면 예외 발생
             throw new BadRequestException('카테고리가 존재하지 않습니다.');
@@ -124,12 +127,13 @@ class CategoryController extends Controller
      * 카테고리 삭제 메서드
      * @param Request $request
      * @return JsonResponse
-     * @throws BadRequestException
+     * @throws BadRequestException|UnauthorizeException
      */
     public function deleteCategory(Request $request): JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
         //query Parameter - 수정할 카테고리 id
         $categoryId = $request->query('categoryId');
@@ -138,7 +142,7 @@ class CategoryController extends Controller
         }
 
         //수정할 카테고리가 존재하는지 확인
-        $category = $this->categoryService->haveCategory($user->id,$categoryId);
+        $category = $this->categoryService->haveCategory($userId,$categoryId);
         if (!$category) {
             //없다면 예외 발생
             throw new BadRequestException('카테고리가 존재하지 않습니다.');

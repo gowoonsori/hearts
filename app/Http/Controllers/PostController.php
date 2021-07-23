@@ -9,6 +9,7 @@ use App\Exceptions\BadRequestException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\InternalServerException;
 use App\Exceptions\NotFoundException;
+use App\Exceptions\UnauthorizeException;
 use App\Services\PostService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
@@ -18,8 +19,8 @@ use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    protected $postService;
-    protected $userService;
+    protected PostService $postService;
+    protected UserService $userService;
 
     public function __construct(PostService $postService,UserService $userService)
     {
@@ -31,26 +32,29 @@ class PostController extends Controller
     /**
      * postId로 문구 조회
      * @param Request $request
-     * @param integer $userId
-     * queryString postId
      * @return JsonResponse
      * @throws BadRequestException
-     * @throws NotFoundException
      * @throws InternalServerException
+     * @throws NotFoundException
+     * @throws UnauthorizeException
+     * @throws ForbiddenException
      */
     function getPost(Request $request) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
         //validate
         $postId = $request->query('postId');
+        if(empty($postId)) throw new BadRequestException('잘못된 요청입니다.');
 
         //post 조회
         $post = $this->postService->getPostById($postId);
+        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
 
         //문구가 검색 불가 설정인데 자기 문구가 아닌 경우
-        if(!$post->search && $post->user_id != $user->id){
+        if(!$post->search && $post->user_id != $userId){
             throw new BadRequestException('조회할 수 없는 문구 입니다.');
         }
 
@@ -60,16 +64,17 @@ class PostController extends Controller
     /**
      * 사용자(자신)의 모든 문구 조회
      * @param Request $request
-     * @param integer $userId
      * @return JsonResponse
-     * @throws NotFoundException|InternalServerException
+     * @throws InternalServerException
+     * @throws UnauthorizeException
      */
     function getPosts(Request $request) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
-        return ApiUtils::success($this->postService->getPostsByUserId($user->id));
+        return ApiUtils::success($this->postService->getPostsByUserId($userId));
     }
 
     /**
@@ -77,14 +82,15 @@ class PostController extends Controller
      * @param Request $request
      * @param int $categoryId
      * @return JsonResponse
-     * @throws InternalServerException
+     * @throws InternalServerException|UnauthorizeException
      */
     function getPostsByCategory(Request $request,int $categoryId) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
-        return ApiUtils::success( $this->postService->getPostsByCategories($user->id,$categoryId));
+        return ApiUtils::success( $this->postService->getPostsByCategories($userId,$categoryId));
     }
 
     /**
@@ -92,13 +98,16 @@ class PostController extends Controller
      * @param Request $request
      * @return JsonResponse
      * @throws BadRequestException
+     * @throws UnauthorizeException
      */
     function createPost(Request $request) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
         //request body 유효성 검사
-        $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$user->id, $request['tags']);
+        $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId, $request['tags']);
         $post = $postDto->getPost();
 
         //문구 등록
@@ -129,11 +138,13 @@ class PostController extends Controller
      * @return JsonResponse
      * @throws BadRequestException
      * @throws ForbiddenException
+     * @throws UnauthorizeException
      */
     function updatePost(Request $request) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
         $postId = $request->query('postId');
         if (empty($postId)) {
@@ -142,10 +153,10 @@ class PostController extends Controller
 
         //수정할 문구가있는지 조회
         $post = $this->postService->getPostById($postId);
-        if($post->user_id != $user->id) throw new ForbiddenException("잘못된 접근입니다.");
+        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
 
         //request body 유효성 검사
-        $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$user->id, $request['tags']);
+        $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId, $request['tags']);
         $postDto = $postDto->getPost();
 
         //문구 수정
@@ -159,11 +170,14 @@ class PostController extends Controller
      * @return JsonResponse
      * @throws BadRequestException
      * @throws ForbiddenException
+     * @throws UnauthorizeException
      */
     function deletePost(Request $request) : JsonResponse
     {
         //User get
-        $user = Auth::user();
+        $userId = Auth::id();
+        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
         $postId = $request->query('postId');
         if (empty($postId)) {
             throw new BadRequestException('잘못된 요청입니다.');
@@ -171,7 +185,7 @@ class PostController extends Controller
 
         //삭제할 문구가있는지 조회
         $post = $this->postService->getPostById($postId);
-        if($post->user_id != $user->id) throw new ForbiddenException("잘못된 접근입니다.");
+        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
 
         //삭제
         $this->postService->deletePost($post);

@@ -14,8 +14,8 @@ class ApiError
      */
     public static function of($e, int $status) : array
     {
-        /*Throwable형태이면 getMessage로 message를 얻고
-        String 형태이면 message로 간주*/
+        /*Throwable 형태이면 getMessage 로 message 를 얻고
+        String 형태이면 message 로 간주*/
         if($e instanceof Throwable){
             $message = $e->getMessage();
         }else $message = $e;

@@ -9,15 +9,15 @@ use App\Models\Post;
 
 class PostDto
 {
-    private $post;
+    private Post $post;
 
     /**
      * @throws BadRequestException
      */
     public function __construct($content, $search, $categoryId, $userId,$tags)
     {
-        $this->post = new Post;
         $this->validate($content,$search,$categoryId,$userId,$tags);
+        $this->post = new Post;
         $this->post->content = $content;
         $this->post->search = $search;
         $this->post->category_id = $categoryId;

@@ -10,7 +10,6 @@ use SocialiteProviders\Manager\OAuth2\User;
 
 class SaraminProvider extends AbstractProvider
 {
-
     public const IDENTIFIER = 'SARAMIN';
     private const OAUTH_URL = 'https://sid.saramin.co.kr';
     private const GATEWAY_URL = 'https://openapi.saramin.co.kr';

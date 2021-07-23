@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 
 class PostService
 {
-    private $postRepository;
+    private PostRepository $postRepository;
 
 
     public function __construct(PostRepository $postRepository,)
@@ -22,11 +22,19 @@ class PostService
         $this->postRepository = $postRepository;
     }
 
-    public function createPost($post){
+    /**
+     * 문구 생성 메서드
+     * @param $post
+     * @return User|Model
+     * @throws InternalServerException
+     */
+    public function createPost($post): Model|User
+    {
         return $this->postRepository->insert($post);
     }
 
     /**
+     * 문구 id로 문구 조회
      * @param integer $postId
      * @return Model
      * @throws InternalServerException
@@ -42,29 +50,34 @@ class PostService
     }
 
     /**
+     * 유저 id로 모든 문구 조회
      * @param integer $userId
      * @return Collection|User[]|null
      * @throws InternalServerException
      */
-    public function getPostsByUserId(int $userId){
+    public function getPostsByUserId(int $userId): array|Collection|null
+    {
         $post = $this->postRepository->findAll($userId);
         if(empty($post)) $post = null;
         return $post;
     }
 
     /**
+     * 사용자의 특정 카테고리의 모든 문구 조회
      * @param integer $userId
      * @param integer $categoryId
      * @return array|Collection|null
      * @throws InternalServerException
      */
-    public function getPostsByCategories(int $userId, int $categoryId){
+    public function getPostsByCategories(int $userId, int $categoryId): array|Collection|null
+    {
         $posts = $this->postRepository->findMyPostsByCategories($userId,$categoryId);
         if(empty($posts)) $posts = null;
         return $posts;
     }
 
     /**
+     * 문구 좋아요 메서드
      * @param Post $post
      * @param User $user
      * @return Post
@@ -78,11 +91,12 @@ class PostService
     }
 
     /**
-     * @param Post $post
-     * @param User $user
+     * 문구 좋아요 취소 메서드
+     * @param $post
+     * @param $user
      * @return bool
      */
-    public function deleteLike(Post $post,User $user): bool
+    public function deleteLike( $user,$post): bool
     {
         $post->likes()->detach($user);
         $post->total_like -= 1;
@@ -91,11 +105,12 @@ class PostService
     }
 
     /**
-     * @param Post $post
-     * @param User $user
+     * 특정 문구를 좋아요 상태인지 판별하는 메서드
+     * @param $user
+     * @param $post
      * @return bool
      */
-    public function isLikePost(User $user,Post $post): bool
+    public function isLikePost($user,$post): bool
     {
         $posts = $user->likes()->get();
         if(!empty($posts->all())) {
@@ -107,6 +122,7 @@ class PostService
 
 
     /**
+     * 문구의 공유수 증가시키는 메서드
      * @param Post $post
      * @return bool
      * */
@@ -117,9 +133,13 @@ class PostService
     }
 
     /**
-     *
-     * */
-    public function updatePost($post,$postDto){
+     * 문구 내용 수정 메서드
+     * @param $post
+     * @param $postDto
+     * @return mixed
+     */
+    public function updatePost($post,$postDto): mixed
+    {
         $post->content = $postDto->content;
         $post->search = $postDto->search;
         $post->category_id = $postDto->category_id;
@@ -130,6 +150,8 @@ class PostService
 
 
     /**
+     * 문구 삭제 메서드
+     * @param $post
      * @return void
      * */
     public function deletePost($post){

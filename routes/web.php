@@ -2,21 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (){
-    return 'hello';
-});
-
-Route::get('/fail', function (){
-    throw new \App\Exceptions\NotFoundException("not found");
-});
+//임시 url
+Route::get('/',function(){
+    return 'home';
+})->name('home');
 
 Route::get('/success',function(){
     return 'success';
 });
 
 
-//내 정보
-Route::prefix('user')->group(function(){
+//사이트의 모든 기능은 세션으로 사용자 구분
+Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
     //개인 정보 조회
     Route::get('/','UserController@get');
 
@@ -46,14 +43,22 @@ Route::prefix('user')->group(function(){
     });
 });
 
+
+/*
+ * 사용자 세션이 없어도 접근할 수 있는 url
+ * */
+
+//로그인
+//Oauth Redirect url
+Route::get('/login/{provider}','SocialController@execute')->name('login');
+//Oauth Callback URL
+Route::get('/login/oauth2/code/{provider}','SocialController@execute');
+
+//로그아웃
+Route::get('/logout','SessionController@destroy')->name('logout');
+
 //문구 공유 횟수 증가
 Route::patch('/post/{postId}/share', 'PostController@updateShareCount');
-
-//Oauth Redirect url
-Route::get('/login/{provider}','SocialController@execute');
-
-//Callback URL
-Route::get('/login/oauth2/code/{provider}','SocialController@execute');
 
 //검색
 Route::get('/search','SearchController@search');        //통합 검색
