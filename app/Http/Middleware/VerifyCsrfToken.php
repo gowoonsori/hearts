@@ -13,13 +13,16 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
             //
-            'http://localhost:8000/user/1/category', //This is the url that I dont want Csrf for postman.
-            'http://localhost:8000/user/1/post', //This is the url that I dont want Csrf for postman.
-            'http://localhost:8000/user/1/post/1/like',
-            'http://localhost:8000/user/1/post/1/like',
-            'http://localhost:8000/post/1/share',
-            'http://localhost:8000/user/1/post/34/like',
+            'http://localhost:8000/user/category', //This is the url that I dont want Csrf for postman.
+            'http://localhost:8000/user/post', //This is the url that I dont want Csrf for postman.
+            'http://localhost:8000/user/post/1/like',
+            'http://localhost:8000/user/post/1/like',
+            'http://localhost:8000/post/share',
+            'http://localhost:8000/user/post/1/like',
             'http://localhost:8000/search',
-            'http://localhost:8000/user/1/category?id=200'
+            'http://localhost:8000/user/category?categoryId=95',
+            'http://localhost:8000/user/category?categoryId=96',
+            'http://localhost:8000/user/post/77/like',
+            'http://localhost:8000/post/77/share',
     ];
 }

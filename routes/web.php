@@ -40,6 +40,9 @@ Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
             Route::patch('/','LikeController@likePost');    //좋아요
             Route::delete('/','LikeController@unlikePost'); //좋아요 취소
         });
+
+        //문구 공유 횟수 증가
+        Route::patch('/{postId}/share', 'PostController@updateShareCount');
     });
 });
 
@@ -57,8 +60,6 @@ Route::get('/login/oauth2/code/{provider}','SocialController@execute');
 //로그아웃
 Route::get('/logout','SessionController@destroy')->name('logout');
 
-//문구 공유 횟수 증가
-Route::patch('/post/{postId}/share', 'PostController@updateShareCount');
 
 //검색
 Route::get('/search','SearchController@search');        //통합 검색

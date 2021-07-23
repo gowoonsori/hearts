@@ -71,6 +71,7 @@ class SocialController extends Controller
    protected function handleProviderCallback(string $provider): Redirector|RedirectResponse|Application
    {
        $socialData = Socialite::driver($provider)->user();
+
        // 사용자 정보 조회 성공 여부 확인
        if (empty($socialData->token)) {
            Log::info('Loading' . $provider . ' access token is fail');
