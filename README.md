@@ -29,7 +29,6 @@ Content-Type: application/json
             "content": "샘플 문구",
             "total_like": 0,
             "share_cnt": 0,
-            "visit_cnt": 0,
             "search": 1,
             "tags": [
                 "비행기",
@@ -64,7 +63,6 @@ Content-Type: application/json
             "content": "샘플 문구",
             "total_like": 0,
             "share_cnt": 0,
-            "visit_cnt": 0,
             "search": 1,
             "tags": [
                 "비행기",
@@ -222,7 +220,6 @@ Content-Type: application/json
         "content": "샘플 문구",
         "total_like": 0,
         "share_cnt": 0,
-        "visit_cnt": 0,
         "search": true,
         "user_id": 1,
         "category_id": 97,
@@ -253,7 +250,6 @@ Content-Type: application/json
         "content": "샘플 문구",
         "total_like": 0,
         "share_cnt": 0,
-        "visit_cnt": 0,
         "search": true,
         "user_id": 1,
         "category_id": 97,
@@ -285,7 +281,6 @@ Content-Type: application/json
         "content": "샘플 문구",
         "total_like": 0,
         "share_cnt": 0,
-        "visit_cnt": 0,
         "search": true,
         "user_id": 1,
         "category_id": 97,
@@ -325,7 +320,6 @@ Content-Type: application/json
         "content": "수정 문구",
         "total_like": 0,
         "share_cnt": 0,
-        "visit_cnt": 0,
         "search": false,
         "user_id": 1,
         "category_id": 97,
@@ -375,7 +369,6 @@ Content-Type: application/json
             "content": "샘플 문구",
             "total_like": 0,
             "share_cnt": 0,
-            "visit_cnt": 0,
             "search": 1,
             "tags": [
                 "비행기",
@@ -410,7 +403,6 @@ Content-Type: application/json
             "content": "샘플 문구",
             "total_like": 1,
             "share_cnt": 0,
-            "visit_cnt": 0,
             "search": 1,
             "tags": [
                 "비행기",
@@ -444,7 +436,6 @@ Content-Type: application/json
             "content": "샘플 문구",
             "total_like": 1,
             "share_cnt": 0,
-            "visit_cnt": 0,
             "search": 1,
             "tags": [
                 "비행기",
@@ -495,7 +486,6 @@ Content-Type: application/json
         "content": "샘플 문구",
         "total_like": 0,
         "share_cnt": 1,
-        "visit_cnt": 0,
         "search": 1,
         "tags": [
             "비행기",

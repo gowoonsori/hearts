@@ -33,7 +33,7 @@ class LikeControllerTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'response' => [
-                    'id','content','total_like','share_cnt','visit_cnt','search','created_at',
+                    'id','content','total_like','share_cnt','search','created_at',
                     'updated_at','user_id','category_id','tags'
                 ]
             ]);
@@ -65,7 +65,7 @@ class LikeControllerTest extends TestCase
                 "success",
                 "response" => [
                     '0'=> [
-                        'id','content','total_like','share_cnt','visit_cnt',
+                        'id','content','total_like','share_cnt',
                         'search','created_at','updated_at','user_id','category_id','tags'
                     ]
                 ]
@@ -126,7 +126,7 @@ class LikeControllerTest extends TestCase
         $postUserId = $this->storeUserToSession();
         $postId = $this->createPost(false);
         Auth::logout();
-        
+
         $userId = $this->storeUserToSession(12345678);
 
         //when
@@ -158,7 +158,13 @@ class LikeControllerTest extends TestCase
         //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertJsonPath('response',true);
+            ->assertJsonStructure([
+                'success',
+                'response' => [
+                    'id','content','total_like','share_cnt','search','created_at',
+                    'updated_at','user_id','category_id','tags'
+                ]
+            ]);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Dtos;
 
 use App\Exceptions\BadRequestException;
 use App\Models\Post;
+use Illuminate\Support\Facades\Log;
 
 class PostDto
 {
@@ -24,7 +25,6 @@ class PostDto
         $this->post->user_id = $userId;
         $this->post->total_like = 0;
         $this->post->share_cnt = 0;
-        $this->post->visit_cnt = 0;
         $this->post->tags = $tags;
     }
 
@@ -43,7 +43,9 @@ class PostDto
         if(gettype($categoryId) != 'integer' || gettype($userId) != 'integer') throw new BadRequestException('잘못된 요청입니다.');
         if(!empty($tags)){
             foreach ($tags as $tag) {
-                if(gettype($tag) != 'string' ) throw new BadRequestException('잘못된 요청입니다.');
+                Log::info(gettype($tag['tag']) .  gettype($tag['color']) );
+                if(gettype($tag['tag']) != 'string' ) throw new BadRequestException('잘못된 요청입니다.');
+                if(gettype($tag['color']) != 'integer' ) throw new BadRequestException('잘못된 요청입니다.');
             }
         }
     }

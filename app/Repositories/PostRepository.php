@@ -32,7 +32,6 @@ class PostRepository
                 'content' => $post['content'],
                 'total_like' => $post['total_like'],
                 'share_cnt' => $post['share_cnt'],
-                'visit_cnt' => $post['visit_cnt'],
                 'search' => $post['search'],
                 'user_id' => $post['user_id'],
                 'category_id' => $post['category_id'],

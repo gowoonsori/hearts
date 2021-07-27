@@ -18,7 +18,6 @@ class Post extends Model
         'content',
         'total_like',
         'share_cnt',
-        'visit_cnt',
         'search',
         'user_id',
         'category_id',

@@ -98,7 +98,7 @@ class PostController extends Controller
      * @param Request $request
      * @return JsonResponse
      * @throws BadRequestException
-     * @throws UnauthorizeException
+     * @throws UnauthorizeException|InternalServerException
      */
     function createPost(Request $request) : JsonResponse
     {

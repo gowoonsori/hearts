@@ -19,7 +19,6 @@ class CreatePostsTable extends Migration
             $table->string('content');
             $table->integer('total_like')->unsigned()->default(0);
             $table->integer('share_cnt')->unsigned()->default(0);
-            $table->integer('visit_cnt')->unsigned()->default(0);
             $table->boolean('search');
             $table->json('tags')->nullable();
             $table->dateTime('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

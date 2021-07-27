@@ -98,6 +98,6 @@ class SocialController extends Controller
 
        Auth::login($user);
        Log::info('Sign in: ' . auth()->user()->name);
-       return redirect()->away('http://localhost')->content($user);
+       return redirect()->away('http://localhost/');
    }
 }

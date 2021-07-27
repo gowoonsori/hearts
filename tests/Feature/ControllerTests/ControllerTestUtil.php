@@ -33,7 +33,8 @@ trait ControllerTestUtil{
             "search" => $search,
             "category_id" => $categoryId,
             "tags" => [
-                "테스트 태그1", "테스트 태그2"
+                ["tag" =>"테스트 태그1", "color" => 352],
+                ["tag" => "테스트 태그2", "color" => 342],
             ]
         ]);
         return json_decode($post->getContent())->response->id;
@@ -46,7 +47,8 @@ trait ControllerTestUtil{
             "search" => true,
             "category_id" => $categoryId,
             "tags" => [
-                "테스트 태그1", "테스트 태그2"
+                ["tag" =>"테스트 태그1", "color" => 352],
+                ["tag" => "테스트 태그2", "color" => 342],
             ]
         ]);
         return json_decode($post->getContent())->response->id;

@@ -33,7 +33,7 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.user_id', 1)
             ->assertJsonStructure([
                 'success','response' => [
-                    'id','content','total_like','share_cnt','visit_cnt','search','created_at',
+                    'id','content','total_like','share_cnt','search','created_at',
                     'updated_at','user_id','category_id','tags'
                 ]
             ]);
@@ -104,7 +104,8 @@ class PostControllerTest extends TestCase
             "search" => true,
             "category_id" => $categoryId,
             "tags" => [
-                "마우스"
+                ["tag" =>"마우스", "color" => 352],
+                ["tag" => "하늘", "color" => 342],
             ]
         ]);
 
@@ -117,7 +118,6 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.user_id', 1)
             ->assertJsonPath('response.total_like', 0)
             ->assertJsonPath('response.share_cnt', 0)
-            ->assertJsonPath('response.visit_cnt', 0)
             ->assertSee('id')
             ->assertSee('tags');
     }
@@ -166,7 +166,7 @@ class PostControllerTest extends TestCase
             ->assertJsonStructure(['success',
                 'response'=> [
                     '0' => [
-                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'id', 'content', 'total_like', 'share_cnt',  'search',
                         'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                     ]
             ]]);
@@ -203,10 +203,11 @@ class PostControllerTest extends TestCase
         $response = $this->getJson('/user/post/all');
 
         //then
-        $response->assertStatus(401)
+        $response->dump();
+        $response->assertStatus(404)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',401)
-            ->assertJsonPath('response.message','인증되지 않은 사용자입니다.');
+            ->assertJsonPath('response.status',404)
+            ->assertJsonPath('response.message','Unauthenticated.');
     }
 
     /**
@@ -231,7 +232,7 @@ class PostControllerTest extends TestCase
             ->assertJsonStructure(['success',
                 'response'=> [
                     '0' => [
-                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'id', 'content', 'total_like', 'share_cnt',  'search',
                         'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                     ]
                 ]]);
@@ -270,7 +271,7 @@ class PostControllerTest extends TestCase
         $postId = $this->createPost($userId);
 
         //when
-        $response = $this->patchJson( '/post/' . $postId . '/share');
+        $response = $this->patchJson( '/user/post/' . $postId . '/share');
 
         //then
         $response->dump();
@@ -279,7 +280,7 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.share_cnt', 1)
             ->assertJsonStructure(['success',
                 'response'=> [
-                        'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                        'id', 'content', 'total_like', 'share_cnt',  'search',
                         'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                 ]
             ]);
@@ -297,7 +298,7 @@ class PostControllerTest extends TestCase
         $postId = 2;
 
         //when
-        $response = $this->patchJson('/post/' . $postId . '/share');
+        $response = $this->patchJson('/user/post/' . $postId . '/share');
 
         //then
 
@@ -394,7 +395,8 @@ class PostControllerTest extends TestCase
             "search" => true,
             "category_id" => $categoryId,
             "tags" => [
-                "수정 태그"
+                ["tag" =>"땅", "color" => 352],
+                ["tag" => "바다", "color" => 342],
             ]
         ]);
 
@@ -404,7 +406,7 @@ class PostControllerTest extends TestCase
             ->assertJsonStructure([
                 'success',
                 'response'=> [
-                    'id', 'content', 'total_like', 'share_cnt', 'visit_cnt', 'search',
+                    'id', 'content', 'total_like', 'share_cnt',  'search',
                     'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                 ]
             ]);
@@ -417,7 +419,7 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.user_id', 1)
             ->assertJsonPath('response.total_like', 0)
             ->assertJsonPath('response.share_cnt', 0)
-            ->assertJsonPath('response.visit_cnt', 0)
-            ->assertJsonPath('response.tags', ["수정 태그"]);
+            ->assertJsonPath('response.tags', [ ["tag" =>"땅", "color" => 352],
+                ["tag" => "바다", "color" => 342]]);
     }
 }
