@@ -7,7 +7,9 @@ use App\Exceptions\InternalServerException;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserRepository
@@ -91,4 +93,14 @@ class UserRepository
         }
         return $userList;
     }
+
+    public function findByIdWithLikes($id)
+    {
+        return DB::table('users')->select(DB::raw("users.id, users.name, GROUP_CONCAT(likes.post_id) as likes"))
+            ->leftJoin('likes','users.id','=','likes.user_id')
+            ->where('users.id', $id)
+            ->groupBy('users.id')
+            ->first();
+    }
+
 }

@@ -94,14 +94,14 @@ class PostService
      * 문구 좋아요 취소 메서드
      * @param $post
      * @param $user
-     * @return bool
+     * @return Post
      */
-    public function deleteLike( $user,$post): bool
+    public function deleteLike( $user,$post): Post
     {
         $post->likes()->detach($user);
         $post->total_like -= 1;
         $post->save();
-        return true;
+        return $post;
     }
 
     /**

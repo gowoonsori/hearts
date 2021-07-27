@@ -24,5 +24,6 @@ class VerifyCsrfToken extends Middleware
             'http://localhost:8000/user/category?categoryId=96',
             'http://localhost:8000/user/post/77/like',
             'http://localhost:8000/post/77/share',
+            'http://localhost:8000/*'
     ];
 }

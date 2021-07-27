@@ -10,6 +10,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -28,18 +29,18 @@ class SocialController extends Controller
      *
      * @param Request $request
      * @param string $provider
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse|Redirector|RedirectResponse|Application
      * @throws BadRequestException
      * @throws InternalServerException
      * @throws UnauthorizeException
      */
-   public function execute(Request $request, string $provider): \Symfony\Component\HttpFoundation\RedirectResponse|Redirector|RedirectResponse|Application
+   public function execute(Request $request, string $provider)
    {
        //인증서버로 redirect
         if (! $request->has('code')){
+        Log::info(3);
             return $this->redirectToProvider($provider);
         }
-
+        Log::info(1);
         //token 을 가지고 있다면 token 서버로 redirect
        return $this->handleProviderCallback($provider);
    }
@@ -64,11 +65,10 @@ class SocialController extends Controller
      * Obtain the user information from the Social Login Provider.
      *
      * @param string $provider
-     * @return Application|Redirector|RedirectResponse
      * @throws UnauthorizeException
      * @throws InternalServerException
      */
-   protected function handleProviderCallback(string $provider): Redirector|RedirectResponse|Application
+   protected function handleProviderCallback(string $provider)
    {
        $socialData = Socialite::driver($provider)->user();
 
@@ -98,6 +98,6 @@ class SocialController extends Controller
 
        Auth::login($user);
        Log::info('Sign in: ' . auth()->user()->name);
-       return redirect('/success');
+       return redirect()->away('http://localhost')->content($user);
    }
 }

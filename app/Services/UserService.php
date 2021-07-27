@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 
 class UserService
 {
@@ -92,5 +93,15 @@ class UserService
     public function getLikePosts(User $user): Collection
     {
         return $user->likes()->get();
+    }
+
+    /**
+     * 좋아요한 정보 포함한 사용자 정보
+     * 쿼리 2번 발생
+     * @param User $user
+     */
+    public function getUserWithLikes(User $user)
+    {
+        return $this->userRepository->findByIdWithLikes($user->id);
     }
 }

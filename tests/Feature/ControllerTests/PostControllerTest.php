@@ -203,10 +203,10 @@ class PostControllerTest extends TestCase
         $response = $this->getJson('/user/post/all');
 
         //then
-        $response->assertStatus(404)
+        $response->assertStatus(401)
             ->assertJsonPath('success',false)
-            ->assertJsonPath('response.status',404)
-            ->assertJsonPath('response.message','Unauthenticated.');
+            ->assertJsonPath('response.status',401)
+            ->assertJsonPath('response.message','인증되지 않은 사용자입니다.');
     }
 
     /**

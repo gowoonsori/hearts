@@ -481,7 +481,7 @@ Content-Type: application/json
 #### 10. 문구 공유수 증가
 요청
 ```json
-PATCH /post/77/share HTTP/1.1
+PATCH /user/post/77/share HTTP/1.1
 Host: localhost:8000
 Content-Type: application/json
 ```

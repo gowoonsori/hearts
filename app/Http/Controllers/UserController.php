@@ -28,11 +28,9 @@ class UserController extends Controller
     {
         $user = Auth::user();
         if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        $res = $this->userService->getUserWithLikes($user);
 
-        return ApiUtils::success($user);
+        return ApiUtils::success($res);
     }
-
-
-
 
 }
