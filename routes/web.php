@@ -21,19 +21,19 @@ Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
     Route::prefix('category')->group(function(){
         Route::get('/', 'CategoryController@getCategories');    //내 카테고리 조회
         Route::post('/','CategoryController@createCategory');   //카테고리 생성
-        Route::patch('/','CategoryController@updateCategory');   //카테고리 수정
-        Route::delete('/','CategoryController@deleteCategory');   //카테고리 삭제
+        Route::patch('/{categoryId}','CategoryController@updateCategory');   //카테고리 수정
+        Route::delete('/{categoryId}','CategoryController@deleteCategory');   //카테고리 삭제
     });
 
     //문구
     Route::prefix('post')->group(function(){
-        Route::get('/','PostController@getPost');   //문구id로 문구 조회
         Route::post('/','PostController@createPost');       //문구 생성
-        Route::patch('/','PostController@updatePost');       //문구 수정
-        Route::delete('/','PostController@deletePost');       //문구 삭제
         Route::get('/all','PostController@getPosts');       //나의 모든 문구 조회
-        Route::get('/category/{categoryId}','PostController@getPostsByCategory'); //특정 카테고리의 나의 문구들 조회
         Route::get('/like','LikeController@getLikePosts');    //내가 좋아요한 문구 조회
+        Route::get('/{postId}','PostController@getPost');   //문구id로 문구 조회
+        Route::patch('/{postId}','PostController@updatePost');       //문구 수정
+        Route::delete('/{postId}','PostController@deletePost');       //문구 삭제
+        Route::get('/category/{categoryId}','PostController@getPostsByCategory'); //특정 카테고리의 나의 문구들 조회
 
         //좋아요
         Route::prefix('/{postId}/like')->group(function(){

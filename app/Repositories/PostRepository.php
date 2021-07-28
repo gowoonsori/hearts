@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PostRepository
@@ -93,6 +94,31 @@ class PostRepository
             }
             return $posts;
         }catch (QueryException $e){
+            throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * Obtain all user's information in random order
+     *
+     * @param $userId
+     * @return \Illuminate\Support\Collection | null
+     * @throws InternalServerException
+     */
+    public function findAllWithUserWithCategory($userId): ?\Illuminate\Support\Collection
+    {
+        try{
+            $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
+                ->join('categories as c','p.category_id','=','c.id')
+                ->join('users as u','u.id','=','p.user_id')
+                ->where('p.user_id',$userId)
+                ->get();
+            if(empty($posts->all())){
+                return null;
+            }
+            return $posts;
+        }catch (QueryException $e){
+            Log::error($e);
             throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }
     }

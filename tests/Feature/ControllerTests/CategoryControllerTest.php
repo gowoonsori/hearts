@@ -131,7 +131,7 @@ class CategoryControllerTest extends TestCase
         $updateTitle = "수정한 카테고리";
 
         //when
-        $response = $this->patchJson('/user/category?categoryId=' . $categoryId,
+        $response = $this->patchJson('/user/category/' . $categoryId,
         ['title' => $updateTitle]);
 
         //then
@@ -159,7 +159,7 @@ class CategoryControllerTest extends TestCase
         $updateTitle = "수정한 카테고리";
 
         //when
-        $response = $this->patchJson('/user/category?categoryId=' . $categoryId,
+        $response = $this->patchJson('/user/category/' . $categoryId,
             ['title' => $updateTitle]);
 
         //then
@@ -182,7 +182,7 @@ class CategoryControllerTest extends TestCase
         $categoryId = 139472673189;
 
         //when
-        $response = $this->patchJson('/user/category?categoryId=' . $categoryId);
+        $response = $this->patchJson('/user/category/' . $categoryId);
 
         //then
         $response->assertStatus(400)
@@ -204,7 +204,7 @@ class CategoryControllerTest extends TestCase
         $categoryId = $this->createCategory($title);
 
         //when
-        $response = $this->deleteJson('/user/category?categoryId=' . $categoryId);
+        $response = $this->deleteJson('/user/category/' . $categoryId);
 
         //then
         $response->assertStatus(200)
@@ -250,7 +250,7 @@ class CategoryControllerTest extends TestCase
         $categoryId =1234232132412;
 
         //when
-        $response = $this->deleteJson('/user/category?categoryId=' . $categoryId);
+        $response = $this->deleteJson('/user/category/' . $categoryId);
 
         //then
         $response->assertStatus(400)

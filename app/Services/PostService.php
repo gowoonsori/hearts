@@ -52,14 +52,12 @@ class PostService
     /**
      * 유저 id로 모든 문구 조회
      * @param integer $userId
-     * @return Collection|User[]|null
+     * @return Collection|null
      * @throws InternalServerException
      */
-    public function getPostsByUserId(int $userId): array|Collection|null
+    public function getPostsByUserId(int $userId): ?Collection
     {
-        $post = $this->postRepository->findAll($userId);
-        if(empty($post)) $post = null;
-        return $post;
+        return $this->postRepository->findAllWithUserWithCategory($userId);
     }
 
     /**

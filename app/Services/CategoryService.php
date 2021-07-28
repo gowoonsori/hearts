@@ -27,7 +27,7 @@ class CategoryService
     /**
      * User 정보로 카테고리 모두 가져오는 메서드
      * @param User $user
-     * @return Collection|null
+     * @return Collection | null
      * */
     public function getCategoriesByUser(User $user): ?Collection
     {

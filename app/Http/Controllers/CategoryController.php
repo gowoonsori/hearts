@@ -90,16 +90,14 @@ class CategoryController extends Controller
      * @throws BadRequestException
      * @throws UnauthorizeException
      */
-    public function updateCategory(Request $request): JsonResponse
+    public function updateCategory(Request $request,$categoryId): JsonResponse
     {
         //User get
         $userId = Auth::id();
         if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
-        //query Parameter - 수정할 카테고리 id
-        $categoryId = $request->query('categoryId');
         $title = $request['title'];
-        if (empty($categoryId) || empty($title)) {
+        if ( empty($title)) {
             throw new BadRequestException('잘못된 요청입니다.');
         }
 
@@ -129,17 +127,11 @@ class CategoryController extends Controller
      * @return JsonResponse
      * @throws BadRequestException|UnauthorizeException
      */
-    public function deleteCategory(Request $request): JsonResponse
+    public function deleteCategory(Request $request,$categoryId): JsonResponse
     {
         //User get
         $userId = Auth::id();
         if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
-
-        //query Parameter - 수정할 카테고리 id
-        $categoryId = $request->query('categoryId');
-        if (empty($categoryId)) {
-            throw new BadRequestException('잘못된 요청입니다.');
-        }
 
         //수정할 카테고리가 존재하는지 확인
         $category = $this->categoryService->haveCategory($userId,$categoryId);

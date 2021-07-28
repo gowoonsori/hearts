@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
 class SessionController extends Controller

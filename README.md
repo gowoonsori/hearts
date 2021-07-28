@@ -179,7 +179,7 @@ Content-Type: application/json
 요청
 
 ```json
-DELETE /user/category?categoryId=95 HTTP/1.1
+DELETE /user/category/{categoryId} HTTP/1.1
 Host: localhost:8000
 Content-Type: application/json
 ```
