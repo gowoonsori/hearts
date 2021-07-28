@@ -96,7 +96,7 @@ class UserRepository
 
     public function findByIdWithLikes($id)
     {
-        return DB::table('users')->select(DB::raw("users.id, users.name, GROUP_CONCAT(likes.post_id) as likes"))
+        return DB::table('users')->select(DB::raw("users.id, users.name,users.email, GROUP_CONCAT(likes.post_id) as likes"))
             ->leftJoin('likes','users.id','=','likes.user_id')
             ->where('users.id', $id)
             ->groupBy('users.id')

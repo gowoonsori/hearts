@@ -16,6 +16,7 @@ use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
@@ -109,7 +110,8 @@ class PostController extends Controller
 
         //문구 등록
         $post = $this->postService->createPost($post);
-        return ApiUtils::success($this->postService->getPostFullInfo($post->id));
+        $post = $this->postService->getPostFullInfo($post->id);
+        return ApiUtils::success($post);
     }
 
     /**
@@ -126,6 +128,7 @@ class PostController extends Controller
         $success = $this->postService->updateShareCount($post);
         if(!$success) throw new InternalServerException('update도중 오류가 발생했습니다.');
 
+        $post = $this->postService->getPostFullInfo($post->id);
         return ApiUtils::success($post);
     }
 

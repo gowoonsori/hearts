@@ -65,6 +65,7 @@ class LikeController extends Controller
             throw new BadRequestException('잘못된 요청입니다.');
         }
         $post = $this->postService->updateLike($post, $user);
+        $post = $this->postService->getPostFullInfo($post->id);
         return ApiUtils::success($post);
     }
 
@@ -93,6 +94,7 @@ class LikeController extends Controller
 
         //좋아요 취소
         $post = $this->postService->deleteLike( $user, $post );
+        $post = $this->postService->getPostFullInfo($post->id);
         return ApiUtils::success($post);
     }
 

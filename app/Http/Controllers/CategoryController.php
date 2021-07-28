@@ -96,12 +96,13 @@ class CategoryController extends Controller
         $userId = Auth::id();
         if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
 
+        //기본 카테고리는 삭제 불가
         $title = $request['title'];
-        if ( empty($title)) {
+        if ( empty($title) || $categoryId == 1) {
             throw new BadRequestException('잘못된 요청입니다.');
         }
 
-        //수정할 카테고리가 존재하는지 확인
+        //수정할 카테고리가 존재하는지 확인.
         $beforeCategory = $this->categoryService->haveCategory($userId,$categoryId);
         if (!$beforeCategory) {
             //없다면 예외 발생
@@ -132,6 +133,11 @@ class CategoryController extends Controller
         //User get
         $userId = Auth::id();
         if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+
+        //기본 카테고리는 삭제 불가
+        if ($categoryId == 1) {
+            throw new BadRequestException('잘못된 요청입니다.');
+        }
 
         //수정할 카테고리가 존재하는지 확인
         $category = $this->categoryService->haveCategory($userId,$categoryId);
