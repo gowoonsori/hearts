@@ -58,7 +58,7 @@ Route::get('/login/{provider}','SocialController@execute')->name('login');
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
 
 //로그아웃
-Route::get('/logout','SessionController@destroy')->name('logout');
+Route::post('/logout','SessionController@destroy')->name('logout');
 
 
 //검색

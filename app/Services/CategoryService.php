@@ -27,13 +27,13 @@ class CategoryService
     /**
      * User 정보로 카테고리 모두 가져오는 메서드
      * @param User $user
-     * @return Collection | string
+     * @return Collection|null
      * */
-    public function getCategoriesByUser(User $user): Collection|string
+    public function getCategoriesByUser(User $user): ?Collection
     {
         $categories = $user->categories()->get();
         if(empty($categories->all())){
-            return 'null';
+            return null;
         }
         return $categories;
     }

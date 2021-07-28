@@ -4,6 +4,8 @@
 namespace App\Http\Controllers;
 
 
+use App\utils\ApiUtils;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -20,14 +22,14 @@ class SessionController extends Controller
     /**
      * Sign out and destroy user's session data
      *
-     * @return RedirectResponse
+     * @return JsonResponse
      */
-    public function destroy(): RedirectResponse
+    public function destroy(): JsonResponse
     {
         $username = auth()->user()->name;
         auth()->logout();
 
         Log::info('Sign out: ' . $username);
-        return redirect()->back();
+        return ApiUtils::success(true);
     }
 }

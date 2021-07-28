@@ -27,7 +27,7 @@ class CategoryControllerTest extends TestCase
         //then
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertJsonPath('response','null');
+            ->assertJsonPath('response',null);
     }
 
     /**
