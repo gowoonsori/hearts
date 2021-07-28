@@ -33,6 +33,8 @@ class PostService
         return $this->postRepository->insert($post);
     }
 
+
+
     /**
      * 문구 id로 문구 조회
      * @param integer $postId
@@ -47,6 +49,16 @@ class PostService
             throw new NotFoundException('존재하지 않은 문구입니다.');
         }
         return $post;
+    }
+
+    /**
+     * 문구내용(사용자 이름과 카테고리) 조회 메서드
+     * @param $postId
+     * @throws InternalServerException
+     */
+    public function getPostFullInfo($postId)
+    {
+        return $this->postRepository->findByIdWithUserWithCategory($postId);
     }
 
     /**

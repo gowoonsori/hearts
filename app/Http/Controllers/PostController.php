@@ -109,7 +109,7 @@ class PostController extends Controller
 
         //문구 등록
         $post = $this->postService->createPost($post);
-        return ApiUtils::success($post);
+        return ApiUtils::success($this->postService->getPostFullInfo($post->id));
     }
 
     /**
