@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Log;
 use Laravel\Scout\Searchable;
 
 class Post extends Model
@@ -32,10 +33,16 @@ class Post extends Model
 
     public function toSearchableArray (): array {
         $array = $this->toArray();
+        $tags = $array['tags'];
+        $convert = '';
+        foreach($tags as $tag){
+            $convert = $convert . $tag['tag'] . ' ';
+         }
+        Log::info($convert);
         return array(
             'id' => $array['id'],
             'content' => $array['content'],
-            'tags' => json_encode( $array['tags'], JSON_UNESCAPED_UNICODE)
+            'tags' => $convert,
         );
     }
 

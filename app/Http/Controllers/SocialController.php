@@ -37,10 +37,8 @@ class SocialController extends Controller
    {
        //인증서버로 redirect
         if (! $request->has('code')){
-        Log::info(3);
             return $this->redirectToProvider($provider);
         }
-        Log::info(1);
         //token 을 가지고 있다면 token 서버로 redirect
        return $this->handleProviderCallback($provider);
    }

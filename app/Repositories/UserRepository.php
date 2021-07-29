@@ -23,13 +23,17 @@ class UserRepository
 
     /**
      * @param User $user
-     * @return bool
+     * @return int
      * @throws InternalServerException
      */
-    public function insert(User $user): bool
+    public function insert(User $user): int
     {
         try {
-            return $user->save();
+            return DB::table('users')->insertGetId([
+                'name' => $user->name,
+                'email' => $user->email,
+                'social_id'=> $user->social_id,
+            ]);
         } catch (QueryException $exception) {
             Log::error("Sign Up Fail Error Message: \n".$exception);
             throw new InternalServerException("사용자 등록중 오류가 발생했습니다.");
@@ -110,7 +114,11 @@ class UserRepository
             ->leftJoin('categories as c','c.id','=','p.category_id')
             ->leftJoin('likes as l','p.id','=','l.post_id')
             ->where('l.user_id', $id)
-            ->get();
+            ->get()
+            ->transform(function ($item){
+                $item->tags = json_decode($item->tags);
+                return $item;
+            });;
     }
 
 }

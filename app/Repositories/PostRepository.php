@@ -77,7 +77,11 @@ class PostRepository
                 ->join('categories as c','p.category_id','=','c.id')
                 ->join('users as u','u.id','=','p.user_id')
                 ->where(['u.id'=>$userId, 'c.id' => $categoryId])
-                ->get();
+                ->get()
+                ->transform(function ($item){
+                    $item->tags = json_decode($item->tags);
+                    return $item;
+                });
         }catch (QueryException $e){
             throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }
@@ -114,7 +118,11 @@ class PostRepository
                 ->join('categories as c','p.category_id','=','c.id')
                 ->join('users as u','u.id','=','p.user_id')
                 ->where('p.id',$postId)
-                ->first();
+                ->get()
+                ->transform(function ($item){
+                    $item->tags = json_decode($item->tags);
+                    return $item;
+                });;
             if(empty($posts)){
                 return null;
             }
@@ -139,7 +147,11 @@ class PostRepository
                 ->join('categories as c','p.category_id','=','c.id')
                 ->join('users as u','u.id','=','p.user_id')
                 ->where('p.user_id',$userId)
-                ->get();
+                ->get()
+                ->transform(function ($item){
+                    $item->tags = json_decode($item->tags);
+                    return $item;
+                });;
             if(empty($posts->all())){
                 return null;
             }

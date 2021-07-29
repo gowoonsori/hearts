@@ -62,6 +62,7 @@ Route::post('/logout','SessionController@destroy')->name('logout');
 
 
 //검색
-Route::get('/search','SearchController@search');        //통합 검색
 Route::get('/search/tag','SearchController@tagSearch');  //태그로 검색
 Route::get('/search/post','SearchController@contentSearch'); //문구내용으로 검색
+Route::get('/search/category','SearchController@categorySearch');        //카테고리 검색
+Route::get('/search','SearchController@search');            //통합 검색

@@ -17,7 +17,6 @@ class Cors
      */
     public function handle(Request $request, Closure $next): mixed
     {
-        Log::info("Using cors for " . $request->url());
         $headers = [
             'Access-Control-Allow-Methods' => '*',
             'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Authorization',

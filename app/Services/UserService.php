@@ -15,10 +15,12 @@ use Illuminate\Database\Query\Builder;
 class UserService
 {
     private UserRepository $userRepository;
+    private CategoryService $categoryService;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepository $userRepository,CategoryService $categoryService)
     {
         $this->userRepository = $userRepository;
+        $this->categoryService = $categoryService;
     }
 
     /**
@@ -52,7 +54,6 @@ class UserService
 
     /**
      * 유저 생성
-     * 쿼리 1번 발생
      * @param $socialData
      * @return User
      * @throws InternalServerException
@@ -64,10 +65,9 @@ class UserService
         $user->email = $socialData->getEmail();
         $user->social_id = $socialData->getId();
 
-        $result = $this->userRepository->insert($user);
-        if(!$result){
-            throw new InternalServerException("사용자 등록중 오류가 발생했습니다.");
-        }
+        $userId = $this->userRepository->insert($user);
+        $this->categoryService->attachWithUser(1,$userId);
+
         return $user;
     }
 
