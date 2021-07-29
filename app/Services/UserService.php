@@ -90,7 +90,11 @@ class UserService
      */
     public function getLikePosts(User $user): \Illuminate\Support\Collection
     {
-        return $this->userRepository->findLikesById($user->id);
+        return $this->userRepository->findLikesById($user->id)
+            ->transform(function ($item){
+                $item->tags = json_decode($item->tags);
+                return $item;
+            });
     }
 
     /**

@@ -114,11 +114,7 @@ class UserRepository
             ->leftJoin('categories as c','c.id','=','p.category_id')
             ->leftJoin('likes as l','p.id','=','l.post_id')
             ->where('l.user_id', $id)
-            ->get()
-            ->transform(function ($item){
-                $item->tags = json_decode($item->tags);
-                return $item;
-            });;
+            ->get();
     }
 
 }

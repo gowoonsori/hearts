@@ -58,7 +58,9 @@ class PostService
      */
     public function getPostFullInfo($postId)
     {
-        return $this->postRepository->findByIdWithUserWithCategory($postId);
+        $post = $this->postRepository->findByIdWithUserWithCategory($postId);
+        $post->tags = json_decode($post->tags);
+        return $post;
     }
 
     /**
@@ -69,7 +71,11 @@ class PostService
      */
     public function getPostsByUserId(int $userId): ?Collection
     {
-        return $this->postRepository->findAllWithUserWithCategory($userId);
+        return $this->postRepository->findAllWithUserWithCategory($userId)
+            ->transform(function ($item){
+            $item->tags = json_decode($item->tags);
+            return $item;
+        });
     }
 
     /**
@@ -80,8 +86,12 @@ class PostService
      */
     public function getPostsByCategories(int $userId, int $categoryId): array|Collection|null
     {
-        $posts = $this->postRepository->findByCategoryAndUserId($userId,$categoryId);
-        if(empty($posts)) $posts = null;
+        $posts = $this->postRepository->findByCategoryAndUserId($userId,$categoryId)
+            ->transform(function ($item){
+                $item->tags = json_decode($item->tags);
+                return $item;
+            });
+        if($posts->isEmpty()) $posts = null;
         return $posts;
     }
 
