@@ -103,4 +103,14 @@ class UserRepository
             ->first();
     }
 
+    public function findLikesById($id): \Illuminate\Support\Collection
+    {
+        return DB::table('posts','p')->select(DB::raw("p.*, u.name as owner, c.title as category"))
+            ->leftJoin('users as u','u.id','=','p.user_id')
+            ->leftJoin('categories as c','c.id','=','p.category_id')
+            ->leftJoin('likes as l','p.id','=','l.post_id')
+            ->where('l.user_id', $id)
+            ->get();
+    }
+
 }

@@ -77,11 +77,10 @@ class PostService
      * @param integer $userId
      * @param integer $categoryId
      * @return array|Collection|null
-     * @throws InternalServerException
      */
     public function getPostsByCategories(int $userId, int $categoryId): array|Collection|null
     {
-        $posts = $this->postRepository->findMyPostsByCategories($userId,$categoryId);
+        $posts = $this->postRepository->findByCategoryAndUserId($userId,$categoryId);
         if(empty($posts)) $posts = null;
         return $posts;
     }
@@ -167,4 +166,17 @@ class PostService
     public function deletePost($post){
         $post->delete();
     }
+
+    /**
+     * @param $userId
+     * @param $categoryId
+     * @return void
+     */
+    public function changeCategory($userId, $categoryId){
+        Post::where('user_id',$userId)
+            ->where('category_id',$categoryId)
+            ->update(['category_id' => 1]);
+    }
+
+
 }

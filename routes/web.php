@@ -33,7 +33,7 @@ Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
         Route::get('/{postId}','PostController@getPost');   //문구id로 문구 조회
         Route::patch('/{postId}','PostController@updatePost');       //문구 수정
         Route::delete('/{postId}','PostController@deletePost');       //문구 삭제
-        Route::get('/category/{categoryId}','PostController@getPostsByCategory'); //특정 카테고리의 나의 문구들 조회
+        Route::get('/category/{categoryId}','PostController@getMyPostsByCategory'); //특정 카테고리의 나의 문구들 조회
 
         //좋아요
         Route::prefix('/{postId}/like')->group(function(){

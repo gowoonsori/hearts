@@ -30,7 +30,7 @@ class LikeController extends Controller
      * 좋아요 한 문구 조회
      * @param Request $request
      * @return JsonResponse
-     * @throws UnauthorizeException
+     * @throws UnauthorizeException|InternalServerException
      */
     public function getLikePosts(Request $request): JsonResponse
     {

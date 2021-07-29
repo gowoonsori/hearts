@@ -67,15 +67,17 @@ class PostRepository
      * Category로 자신의 문구 조회
      * @param integer $userId
      * @param integer $categoryId
-     * @return array | Collection
+     * @return \Illuminate\Support\Collection
      * @throws InternalServerException
      */
-    public function findMyPostsByCategories(int $userId,int $categoryId)
+    public function findByCategoryAndUserId(int $userId,int $categoryId): \Illuminate\Support\Collection
     {
         try{
-            $posts = $this->post->where(['user_id'=>$userId, 'category_id' => $categoryId])->get();
-            if(empty($posts->all())) return [];
-            return $posts;
+            return DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
+                ->join('categories as c','p.category_id','=','c.id')
+                ->join('users as u','u.id','=','p.user_id')
+                ->where(['u.id'=>$userId, 'c.id' => $categoryId])
+                ->get();
         }catch (QueryException $e){
             throw new InternalServerException("문구 조회중 오류가 발생했습니다.");
         }

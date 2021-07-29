@@ -22,10 +22,9 @@ class User extends Authenticatable
         'social_id',
         'name',
         'email',
-        'access_token',
     ];
 
-    protected $hidden = ['access_token','social_id','id','pivot'];
+    protected $hidden = ['social_id','id','pivot'];
 
     public function posts(): HasMany
     {

@@ -6,6 +6,7 @@ use App\Exceptions\BadRequestException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\UnauthorizeException;
 use App\Services\CategoryService;
+use App\Services\PostService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
@@ -17,11 +18,13 @@ class CategoryController extends Controller
 {
     protected CategoryService $categoryService;
     protected UserService $userService;
+    protected PostService $postService;
 
-    public function __construct(CategoryService $categoryService,UserService $userService)
+    public function __construct(CategoryService $categoryService,UserService $userService,PostService $postService)
     {
         $this->categoryService = $categoryService;
         $this->userService = $userService;
+        $this->postService = $postService;
     }
 
     /**
@@ -86,6 +89,7 @@ class CategoryController extends Controller
     /**
      * 카테고리 수정 메서드
      * @param Request $request
+     * @param $categoryId
      * @return JsonResponse
      * @throws BadRequestException
      * @throws UnauthorizeException
@@ -125,8 +129,10 @@ class CategoryController extends Controller
     /**
      * 카테고리 삭제 메서드
      * @param Request $request
+     * @param $categoryId
      * @return JsonResponse
-     * @throws BadRequestException|UnauthorizeException
+     * @throws BadRequestException
+     * @throws UnauthorizeException
      */
     public function deleteCategory(Request $request,$categoryId): JsonResponse
     {
@@ -148,6 +154,9 @@ class CategoryController extends Controller
 
         //연결관계 끊기
         $this->categoryService->detachWithUser($category->id);
+
+        //해당 카테고리에 속하는 문구들 기본카테고리로 변경
+        $this->postService->changeCategory($userId,$categoryId);
 
         return ApiUtils::success(true);
     }

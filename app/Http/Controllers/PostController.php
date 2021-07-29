@@ -80,9 +80,9 @@ class PostController extends Controller
      * @param Request $request
      * @param int $categoryId
      * @return JsonResponse
-     * @throws InternalServerException|UnauthorizeException
+     * @throws UnauthorizeException
      */
-    function getPostsByCategory(Request $request,int $categoryId) : JsonResponse
+    function getMyPostsByCategory(Request $request,int $categoryId) : JsonResponse
     {
         //User get
         $userId = Auth::id();

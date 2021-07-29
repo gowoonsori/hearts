@@ -63,7 +63,6 @@ class UserService
         $user->name = $socialData->getName();
         $user->email = $socialData->getEmail();
         $user->social_id = $socialData->getId();
-        $user->access_token = $socialData->token;
 
         $result = $this->userRepository->insert($user);
         if(!$result){
@@ -85,14 +84,13 @@ class UserService
     }
 
     /**
-     * 좋아요한 문구들 조회
-     * 쿼리 2번 발생
+     *
      * @param User $user
-     * @return Collection
-     * */
-    public function getLikePosts(User $user): Collection
+     * @return \Illuminate\Support\Collection
+     */
+    public function getLikePosts(User $user): \Illuminate\Support\Collection
     {
-        return $user->likes()->get();
+        return $this->userRepository->findLikesById($user->id);
     }
 
     /**
