@@ -6,15 +6,15 @@ use Illuminate\Http\JsonResponse;
 
 class ApiUtils
 {
-    private static $successCode = 200;
 
     /**
-     * @param $response Object | array | string | integer | bool
+     * @param $response Object | integer | bool | array | string
+     * @param int $code
      * @return JsonResponse
      */
-    public static function success($response) : JsonResponse
+    public static function success(object|int|bool|array|string $response, int $code = 200) : JsonResponse
     {
-        return response()->json(ApiResult::of(true,$response), self::$successCode,
+        return response()->json(ApiResult::of(true,$response), $code,
             ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'], JSON_UNESCAPED_UNICODE);
     }
 

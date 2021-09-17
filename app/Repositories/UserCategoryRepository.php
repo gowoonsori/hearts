@@ -4,32 +4,65 @@
 namespace App\Repositories;
 
 
-use Illuminate\Database\Eloquent\Model;
+use App\Exceptions\InternalServerException;
+use App\utils\ExceptionMessage;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserCategoryRepository
 {
+
     /**
-     * fk를 이용해 조회
+     * 사용자 id를 이용해 user-category 와 category 테이블의 row 조회
      * @param integer $userId
-     * @param integer $categoryId
+     * @return object|null
+     * @throws InternalServerException
      */
-    function findByUserIdAndCategoryId(int $userId, int $categoryId)
+    function findByUserId(int $userId):  ?object
     {
-        return DB::table('user_category')->where([
-            'user_id' => $userId,
-            'category_id' => $categoryId,
-        ])->first();
+        try {
+            return DB::table('user_category','uc')->select('uc.*, c.title')
+                ->join('categories as c', 'c.id', '=', 'uc.category_id' )
+                ->where(['uc.user_id' => $userId])
+                ->get();
+        }catch (QueryException $e){
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_GET);
+        }
     }
 
     /**
-     * 삭제
+     * fk를 이용해 user-category sub 테이블의 row 한개 조회
+     * @param integer $userId
+     * @param integer $categoryId
+     * @return object|null
+     * @throws InternalServerException
+     */
+    function findByUserIdAndCategoryId(int $userId, int $categoryId):  ?object
+    {
+        try {
+            return DB::table('user_category')->where([
+                'user_id' => $userId,
+                'category_id' => $categoryId,
+            ])->first();
+        }catch (QueryException $e){
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_GET);
+        }
+    }
+
+    /**
+     * id를 이용하여 row 삭제
      * @param int $id
      * @return void
+     * @throws InternalServerException
      */
     function deleteById(int $id): void
     {
-        DB::table('user_category')->delete(['id' => $id,]);
+        try {
+            DB::table('user_category')->delete(['id' => $id,]);
+        }catch (QueryException $e){
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_DELETE);
+        }
     }
 
     /**
@@ -37,27 +70,40 @@ class UserCategoryRepository
      * @param int $categoryId
      * @param int $userId
      * @return bool
+     * @throws InternalServerException
      */
     function insert(int $categoryId, int $userId): bool
     {
-        return DB::table('user_category')->insert([
-            'category_id' => $categoryId,
-            'user_id' => $userId
-        ]);
+        try {
+            return DB::table('user_category')->insert([
+                'category_id' => $categoryId,
+                'user_id' => $userId
+            ]);
+        }catch (QueryException $e){
+            Log::error($e);
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_INSERT);
+        }
     }
 
     /**
      * 삽입
-     * @param int $id
+     * @param int $userId
      * @param int $categoryId
+     * @param int $updateId
      * @return int
+     * @throws InternalServerException
      */
-    function update(int $id, int $categoryId): int
+    function update(int $userId, int $categoryId, int $updateId): int
     {
-        return DB::table('user_category')
-            ->where('id',$id)
-            ->update([
-            'category_id' => $categoryId,
-        ]);
+        try {
+            return DB::table('user_category')
+                ->where('user_id', $userId)
+                ->where('category_id',$categoryId)
+                ->update([
+                    'category_id' => $updateId,
+                ]);
+        }catch (QueryException $e){
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_UPDATE);
+        }
     }
 }

@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use App\MyIndexConfigurator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Log;
-use Laravel\Scout\Searchable;
+use ScoutElastic\Searchable;
 
 class Post extends Model
 {
     use HasFactory,Searchable;
+
+    public const CONTENT_FIELD = 'content';
+    public const TAG_FIELD = 'tags.tag';
+    public const CATEGORY_FIELD = 'category';
+    public const SCROLL_TIME = '10m';
 
     public $timestamps = false;
 
@@ -26,24 +31,102 @@ class Post extends Model
     ];
 
     protected $casts = [
-        'tags' => 'array'
+        'tags' => 'array',
+        'search' => 'boolean',
     ];
 
     protected $hidden = ['pivot'];
 
+    protected $indexConfigurator = MyIndexConfigurator::class;
+
+    protected $mapping = [
+        'properties' => [
+            'content' => [
+                'type' => 'text',
+                'analyzer' => 'nori',
+                'search_analyzer' => 'nori',
+                'fields' => [
+                    'keyword' => [
+                        'type' => 'keyword',
+                    ],
+                ],
+            ],
+            'tags' => [
+                'properties' => [
+                    'tag' =>[
+                        'type' => 'text',
+                        'analyzer' => 'nori',
+                        'search_analyzer' => 'nori',
+                        'fields' => [
+                            'keyword' => [
+                                'type' => 'keyword',
+                            ],
+                        ]
+                    ]
+                ]
+            ],
+            'category' => [
+                'type' => 'text',
+                'analyzer' => 'nori',
+                'search_analyzer' => 'nori',
+                'fields' => [
+                    'keyword' => [
+                        'type' => 'keyword',
+                    ],
+                ]
+            ],
+            'owner' => [
+                'type' => 'text',
+                'analyzer' => 'nori',
+                'search_analyzer' => 'nori',
+                'fields' => [
+                    'keyword' => [
+                        'type' => 'keyword',
+                    ],
+                ]
+            ],
+            'total_like' => [
+                'type' => 'integer',
+                'index' => false,
+            ],
+            'share_cnt' => [
+                'type' => 'integer',
+                'index' => false,
+            ],
+            'search' => [
+                'type' => 'boolean',
+                'index' => false,
+            ],
+            'user_id' => [
+                'type' => 'integer',
+                'index' => false,
+            ],
+            'category_id' => [
+                'type' => 'integer',
+                'index' => false,
+            ],
+        ]
+    ];
+
+    public function searchableAs(): string
+    {
+        return 'posts_index';
+    }
+
     public function toSearchableArray (): array {
-        $array = $this->toArray();
-        $tags = $array['tags'];
-        $convert = '';
-        foreach($tags as $tag){
-            $convert = $convert . $tag['tag'] . ' ';
-         }
-        Log::info($convert);
-        return array(
+        $array =  $this->load(['category','user'])->toArray();
+        $result = [
             'id' => $array['id'],
             'content' => $array['content'],
-            'tags' => $convert,
-        );
+            'category' => $array['category']['title'],
+            'total_like' => $array['total_like'],
+            'share_cnt' => $array['share_cnt'],
+            'search' => $array['search'],
+            'user_id' => $array['user_id'],
+            'category_id' => $array['category_id'],
+            'owner' => $array['user']['name'],
+        ];
+        return array_merge($result, ['tags' =>$array['tags']]);
     }
 
     public function shouldBeSearchable()

@@ -4,8 +4,10 @@
 namespace App\Exceptions;
 
 
+use App\utils\ExceptionMessage;
+
 class ForbiddenException extends \Exception
 {
     protected $code = 403;
-    protected $message = '접근 권한이 존재하지 않습니다.';
+    protected $message = ExceptionMessage::FORBIDDEN;
 }

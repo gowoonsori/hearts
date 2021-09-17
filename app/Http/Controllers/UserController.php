@@ -3,12 +3,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\UnauthorizeException;
+use App\Exceptions\InternalServerException;
+use App\Exceptions\UnAuthorizeException;
+use App\JwtAuth;
 use App\Services\UserService;
 use App\utils\ApiUtils;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Tymon\JWTAuth\Token;
 
 class UserController extends Controller
 {
@@ -20,17 +23,32 @@ class UserController extends Controller
     }
 
     /**
-     * @param Request $request
+     * /user
+     * 사용자 정보 조회
      * @return JsonResponse
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException|InternalServerException
      */
-    function get(Request $request) : JsonResponse
+    function get() : JsonResponse
     {
         $user = Auth::user();
-        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($user)) throw new UnAuthorizeException();
+        //좋아요 정보 포함
         $res = $this->userService->getUserWithLikes($user);
-
         return ApiUtils::success($res);
     }
 
+    /**
+     * Sign out and destroy user's session data
+     *
+     * @param Request $request
+     * @return JsonResponse
+     * @throws UnAuthorizeException
+     */
+    public function destroy(Request $request): JsonResponse
+    {
+        $token = new Token(JwtAuth::getToken($request));
+        JwtAuth::setToken($token);
+        JwtAuth::invalidate($token);
+        return ApiUtils::success(true);
+    }
 }

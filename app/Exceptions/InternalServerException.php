@@ -4,8 +4,10 @@
 namespace App\Exceptions;
 
 
+use App\utils\ExceptionMessage;
+
 class InternalServerException extends \Exception
 {
     protected $code = 500;
-    protected $message = "서버에 오류가 발생하였습니다.";
+    protected $message = ExceptionMessage::INTERNAL;
 }

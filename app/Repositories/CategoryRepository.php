@@ -4,10 +4,9 @@
 namespace App\Repositories;
 
 
+use App\Exceptions\InternalServerException;
 use App\Models\Category;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\utils\ExceptionMessage;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 
@@ -20,46 +19,55 @@ class CategoryRepository
         $this->category = new Category;
     }
 
-
     /**
-     * 문구로 검색
+     * 카테고리 이름으로 조회
      * @param $title
-     * @return Category| null
+     * @return object| null
+     * @throws InternalServerException
      */
-    public function findByTitle($title): ?Category
+    public function findByTitle($title):  ?object
     {
-        return $this->category->where(['title' => $title])->first();
+        try {
+            return $this->category->where(['title' => $title])->first();
+        }catch (QueryException $exception) {
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_GET);
+        }
     }
 
     /**
-     * id로 문구 검색
+     * id로 카테고리 조회
      * @param $id
-     * @return Category|null
+     * @return object|null
+     * @throws InternalServerException
      */
-    public function findById($id): ?Category
+    public function findById($id):  ?object
     {
-        return $this->category->where(['id' => $id])->first();
+        try {
+            return $this->category->where(['id' => $id])->first();
+        }catch (QueryException $exception) {
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_GET);
+        }
     }
-
 
 
     /**
      * 카테고리 삽입
      * @param $title
-     * @return User|bool|Model
+     * @return object|null
+     * @throws InternalServerException
      */
-    public function insert($title){
+    public function insert($title):  ?object
+    {
         $nowDt = now();
-
         try {
             return $this->category->create([
                 'title' => $title,
                 'updated_at' => $nowDt,
                 'created_at' => $nowDt
             ]);
-        } catch (QueryException $exception) {
-            Log::error("Insert Category Fail Error Message: \n".$exception);
-            throw new ModelNotFoundException("카테고리 생성중 오류가 발생했습니다.");
+        } catch (QueryException $e) {
+            Log::error($e);
+            throw new InternalServerException(ExceptionMessage::INTERNAL_CATEGORY_INSERT);
         }
     }
 }

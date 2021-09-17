@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\BadRequestException;
-use App\Exceptions\NotFoundException;
-use App\Exceptions\UnauthorizeException;
+use App\Exceptions\InternalServerException;
+use App\Exceptions\UnAuthorizeException;
 use App\Services\CategoryService;
 use App\Services\PostService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
+use App\utils\ExceptionMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,41 +29,39 @@ class CategoryController extends Controller
     }
 
     /**
-     * 사용자의 카테고리 모두 조회하는 메서드
-     *
-     * @param Request $request
+     * /user/category
+     * 사용자의 카테고리 모두 조회
      * @return JsonResponse
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException
      */
-    function getCategories(Request $request): JsonResponse
+    function getCategories(): JsonResponse
     {
         //User get
         $user = Auth::user();
-        if(empty($user)) throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($user)) throw new UnAuthorizeException();
 
         return ApiUtils::success($this->categoryService->getCategoriesByUser($user));
     }
 
 
     /**
-     * 카테고리 생성 메서드
-     *
+     * /user/category
+     * 카테고리 생성
      * @param Request $request
      * @return JsonResponse
-     * @throws NotFoundException
-     * @throws BadRequestException|UnauthorizeException
+     * @throws BadRequestException|UnAuthorizeException|InternalServerException
      */
     public function createCategory(Request $request): JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //request body($title) validate
         $title = $request['title'];
-        if (empty($title)) {
-            Log::error('잘못된 입력입니다.');
-            throw new NotFoundException('잘못된 입력입니다.');
+        if (empty($title) || preg_match_all("/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣 ]/",$title) != 0 ||
+            mb_strlen($title) > 20){
+            throw new BadRequestException();
         }
 
         //카테고리 테이블에 카테고리가 존재하는지 확인
@@ -72,9 +71,9 @@ class CategoryController extends Controller
             $category = $this->categoryService->createCategory($title);
         }else{
             //있다면 내가 가진 카테고리인지 확인
-            $isMyCategory = $this->categoryService->haveCategory($userId,$category->id);
+            $isMyCategory = $this->categoryService->haveCategoryByCategoryId($userId,$category->id);
             if($isMyCategory){
-                throw new BadRequestException('이미 존재하는 카테고리입니다.');
+                throw new BadRequestException(ExceptionMessage::BADREQUEST_CATEGORY_DUPLICATE);
             }
         }
 
@@ -83,35 +82,37 @@ class CategoryController extends Controller
             $this->categoryService->attachWithUser($category->id,$userId);
         }
 
-        return ApiUtils::success($category);
+        return ApiUtils::success($category,201);
     }
 
     /**
-     * 카테고리 수정 메서드
+     * /user/category/{categoryId}
+     * 카테고리 수정
      * @param Request $request
-     * @param $categoryId
+     * @param int $categoryId
      * @return JsonResponse
      * @throws BadRequestException
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException|InternalServerException
      */
-    public function updateCategory(Request $request,$categoryId): JsonResponse
+    public function updateCategory(Request $request,int $categoryId): JsonResponse
     {
         //User get
-        $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        $user = Auth::user();
+        if(empty($user))throw new UnAuthorizeException();
 
-        //기본 카테고리는 삭제 불가
+        //기본 카테고리는 삭제 불가 | validate
         $title = $request['title'];
-        if ( empty($title) || $categoryId == 1) {
-            throw new BadRequestException('잘못된 요청입니다.');
+        if ( empty($title) || $categoryId == 1 || gettype($categoryId) != 'integer'
+            || preg_match_all("/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣 _-]/",$title) != 0) {
+            throw new BadRequestException();
         }
 
         //수정할 카테고리가 존재하는지 확인.
-        $beforeCategory = $this->categoryService->haveCategory($userId,$categoryId);
-        if (!$beforeCategory) {
-            //없다면 예외 발생
-            throw new BadRequestException('카테고리가 존재하지 않습니다.');
-        }
+        $categories = $this->categoryService->getCategoriesByUser($user)->pluck('id','title')->all();
+        if(array_search($categoryId,array_values($categories)) === false){
+            throw new BadRequestException(ExceptionMessage::BADREQUEST_CATEGORY_NOTEXIST);
+        }else if(array_key_exists($title,$categories)) throw new BadRequestException(ExceptionMessage::BADREQUEST_CATEGORY_DUPLICATE);
+
 
         //수정하고 싶은 이름의 카테고리가 존재하는지 확인
         $category = $this->categoryService->getCategoryByTitle($title);
@@ -120,43 +121,57 @@ class CategoryController extends Controller
             $category = $this->categoryService->createCategory($title);
         }
 
+        //검색엔진의 데이터 bulk update
+        $postIds = $this->postService->getPostIdsByCategories($user->id,$categoryId);
+        $postIds = $postIds->pluck('id')->all();
+        $this->postService->bulkUpdateCategoryInElastic($postIds,$category->id, $title);
+
+        //db post 데이터 bulk update
+        $this->postService->bulkUpdateCategory($postIds,$category->id);
+
         //연결관계 수정
-        $this->categoryService->updateCategoryConnect($beforeCategory->id,$category->id);
+        $this->categoryService->updateCategoryConnect($user->id,$categoryId,$category->id);
 
         return ApiUtils::success($category);
     }
 
     /**
-     * 카테고리 삭제 메서드
+     * /user/category/{categoryId}
+     * 카테고리 삭제
      * @param Request $request
-     * @param $categoryId
+     * @param int $categoryId
      * @return JsonResponse
      * @throws BadRequestException
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException|InternalServerException
      */
-    public function deleteCategory(Request $request,$categoryId): JsonResponse
+    public function deleteCategory(Request $request,int $categoryId): JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //기본 카테고리는 삭제 불가
-        if ($categoryId == 1) {
-            throw new BadRequestException('잘못된 요청입니다.');
+        if ($categoryId == 1 || gettype($categoryId) != 'integer') {
+            throw new BadRequestException();
         }
 
         //수정할 카테고리가 존재하는지 확인
-        $category = $this->categoryService->haveCategory($userId,$categoryId);
+        $category = $this->categoryService->haveCategoryByCategoryId($userId,$categoryId);
         if (!$category) {
             //없다면 예외 발생
-            throw new BadRequestException('카테고리가 존재하지 않습니다.');
+            throw new BadRequestException(ExceptionMessage::BADREQUEST_CATEGORY_NOTEXIST);
         }
 
         //연결관계 끊기
         $this->categoryService->detachWithUser($category->id);
 
+        //검색엔진의 데이터 bulk update
+        $postIds = $this->postService->getPostIdsByCategories($userId,$categoryId);
+        $postIds = $postIds->pluck('id')->all();
+        $this->postService->bulkUpdateCategoryInElastic($postIds);
+
         //해당 카테고리에 속하는 문구들 기본카테고리로 변경
-        $this->postService->changeCategory($userId,$categoryId);
+        $this->postService->changeCategoryDefault($userId,$categoryId);
 
         return ApiUtils::success(true);
     }

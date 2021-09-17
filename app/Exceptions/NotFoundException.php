@@ -4,8 +4,10 @@
 namespace App\Exceptions;
 
 
+use App\utils\ExceptionMessage;
+
 class NotFoundException extends \Exception
 {
     protected $code = 404;
-    protected $message = '찾을 수 없습니다.';
+    protected $message = ExceptionMessage::NOTFOUND;
 }

@@ -20,10 +20,10 @@ class ApiError
             $message = $e->getMessage();
         }else $message = $e;
 
-         return [
-             "status" => $status,
-             "message" => $message,
-         ];
+        return [
+            "status" => $status,
+            "message" => $message,
+        ];
     }
 
 }

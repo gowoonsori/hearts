@@ -2,175 +2,132 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Exceptions\BadRequestException;
+use App\Exceptions\InternalServerException;
 use App\Models\Post;
+use App\Services\PostService;
+use App\Services\RequestService;
 use App\utils\ApiUtils;
+use App\utils\ExceptionMessage;
+use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SearchController extends Controller
 {
+    private PostService $postService;
+    private RequestService $requestService;
+
+    public function __construct(PostService $postService,RequestService $requestService)
+    {
+        $this->postService = $postService;
+        $this->requestService = $requestService;
+    }
+
     /**
+     * /search?keyword=
+     * /search?keyword=?lastId=
+     * 문구 내용, 카테고리, 태그 통합 검색
      * @param Request $request
      * @return JsonResponse
-     * */
+     * @throws BadRequestException|InternalServerException
+     */
     public function search(Request $request): JsonResponse
     {
-        //문구+태그로 검색
-        $keyword = $request->query('keyword');
-        $post = Post::search($keyword);
-        $category = Category::search($keyword);
+        $queryString = $this->requestService->getKeywordAndScrollIdAndSize($request);
 
-        $posts = null;
-        if(!empty($keyword)) {
-            $postIds = $post->keys()->toArray();
-            $categoryIds = $category->keys()->toArray();
-
-            //문구내용, 카테고리 두개의 인덱스에 안걸렸을때
-            if(empty($postIds) && empty($categoryIds)){
-                return ApiUtils::success(null);
-            }else if(empty($postIds)){
-                //카테고리만 걸렸을때
-                $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                    ->join('categories as c','p.category_id','=','c.id')
-                    ->join('users as u','u.id','=','p.user_id')
-                    ->whereIn('p.category_id',$categoryIds)
-                    ->Where('p.search',1)
-                    ->get()
-                    ->transform(function ($item){
-                        $item->tags = json_decode($item->tags);
-                        return $item;
-                    });
-                if($posts?->isEmpty())return ApiUtils::success(null);
-            }else if(empty($categoryIds)){
-                //문구만 걸렸을때
-                $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                    ->join('categories as c','p.category_id','=','c.id')
-                    ->join('users as u','u.id','=','p.user_id')
-                    ->whereIn('p.id',$postIds)
-                    ->get()
-                    ->transform(function ($item){
-                        $item->tags = json_decode($item->tags);
-                        return $item;
-                    });
-            }else{
-                //둘다 포함되어있을때
-                $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                    ->join('categories as c','p.category_id','=','c.id')
-                    ->join('users as u','u.id','=','p.user_id')
-                    ->whereIn('p.id',$postIds)
-                    ->orWhereIn('p.category_id',$categoryIds)
-                    ->Where('p.search',1)
-                    ->get()
-                ->transform(function ($item){
-                    $item->tags = json_decode($item->tags);
-                    return $item;
-                });
-            }
+        if(!isset($queryString['scrollId'])){
+            //모두 조회
+            $posts = $this->postService->getPostsMatchMultiField($queryString['keyword']);
+        }else if($queryString['scrollId'] === "0"){
+            //scroll 생성
+            $posts = $this->postService->createScrollIdMatchMultiField($queryString['keyword'],$queryString['size']);
+        }else{
+            //scroll 조회
+            $posts = $this->postService->getPostsByScrollId($queryString['scrollId']);
         }
 
-       return ApiUtils::success($posts);
+        //문구정보만 추출
+        $posts = $this->postService->getPostsInfoFromElasticRawData($posts);
+        return ApiUtils::success($posts);
     }
 
     /**
+     * /search/tag?keyword=
+     * /search/tag?keyword=?lastId=
+     * 태그로 검색
      * @param Request $request
      * @return JsonResponse
-     * */
+     * @throws BadRequestException|InternalServerException
+     */
     public function tagSearch(Request $request): JsonResponse
     {
-        //태그로 검색
-        $keyword = $request->query('keyword');
-
-        $posts = null;
-        if(!empty($keyword)) {
-            $postIds = Post::search($keyword);
-
-            //posts.index에 없다면 select쿼리 실행 x
-            if($postIds->keys()->isEmpty()) return ApiUtils::success(null);
-            $postIds = $postIds->keys()->toArray();
-
-            $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                ->join('categories as c','p.category_id','=','c.id')
-                ->join('users as u','u.id','=','p.user_id')
-                ->whereIn('p.id',$postIds)
-                ->where('p.tags','like', '%' . $keyword . '%')
-                ->get()
-                ->transform(function ($item){
-                    $item->tags = json_decode($item->tags);
-                    return $item;
-                });
-        }
-
-        return ApiUtils::success($posts);
+        //태그 필드로 검색
+        return ApiUtils::success($this->searchBySingleField($request,Post::TAG_FIELD) );
     }
 
     /**
+     * /search/post?keyword=
+     * /search/post?keyword=?lastId=
+     * 문구 내용으로 검색
      * @param Request $request
      * @return JsonResponse
-     * */
+     * @throws BadRequestException|InternalServerException
+     */
     public function contentSearch(Request $request): JsonResponse
     {
-        //문구로 검색
-        $keyword = $request->query('keyword');
-
-        $posts = null;
-        if(!empty($keyword)) {
-            $postIds = Post::search($keyword);
-            //posts.index에 없다면 select쿼리 실행 x
-            if($postIds->keys()?->isEmpty()) return ApiUtils::success(null);
-            $postIds = $postIds->keys()->toArray();
-
-            $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                ->join('categories as c','p.category_id','=','c.id')
-                ->join('users as u','u.id','=','p.user_id')
-                ->whereIn('p.id',$postIds)
-                ->where('p.content','like', '%' . $keyword . '%')
-                ->get()
-                ->transform(function ($item){
-                    $item->tags = json_decode($item->tags);
-                    return $item;
-                });
-
-            //검색index에는 있으나 db에는 없는 경우(sync가 깨진경우)
-            if($posts?->isEmpty()) return ApiUtils::success(null);
-        }
-
-        return ApiUtils::success($posts);
+        //content 필드로 검색
+        return ApiUtils::success( $this->searchBySingleField($request,Post::CONTENT_FIELD));
     }
 
     /**
+     * /search/category?keyword=
+     * /search/category?keyword=?lastId=
+     * 카테고리로 문구 조회
      * @param Request $request
      * @return JsonResponse
-     * */
+     * @throws BadRequestException|InternalServerException
+     */
     public function CategorySearch(Request $request): JsonResponse
     {
-        //문구로 검색
-        $keyword = $request->query('keyword');
-
-        $posts = null;
-        if(!empty($keyword)) {
-            $categoryIds = Category::search($keyword);
-
-            //posts.index에 없다면 select쿼리 실행 x
-            if($categoryIds->keys()->isEmpty()) return ApiUtils::success(null);
-            $categoryIds = $categoryIds->keys()->toArray();
-
-            $posts = DB::table('posts','p')->select(DB::raw('p.*, u.name as owner, c.title as category'))
-                ->join('categories as c','p.category_id','=','c.id')
-                ->join('users as u','u.id','=','p.user_id')
-                ->whereIn('p.category_id',$categoryIds)
-                ->where('p.search',1)
-                ->get()
-                ->transform(function ($item) {
-                    $item->tags = json_decode($item->tags);
-                    return $item;
-                });
-            //검색index에는 있으나 db에는 없는 경우(sync가 깨진경우)
-            if($posts?->isEmpty()) return ApiUtils::success(null);
-        }
-        return ApiUtils::success($posts);
+        //카테고리 필드로 검색
+        return ApiUtils::success($this->searchBySingleField($request,Post::CATEGORY_FIELD));
     }
 
+    /**
+     * 키워드로 단일 필드 검색후 정보만 반환해주는 메서드
+     * @throws InternalServerException
+     * @throws BadRequestException
+     */
+    private function searchBySingleField(Request $request, string $searchField): array
+    {
+        $queryString = $this->requestService->getKeywordAndScrollIdAndSize($request);
+
+        //정확히 일치하는 문서조회 인지 쿼리 스트링 판별
+        $exact = $request->query('exact');
+        if($exact === 'true') {
+            $searchMethod = 'filter';
+            $keywordType = '.keyword';
+        }else{
+            $searchMethod = 'must';
+            $keywordType = '';
+        }
+
+        if(!isset($queryString['scrollId'])){
+            //모두 조회
+            $posts = $this->postService->getPostsMatchSingleField($searchField,$queryString['keyword'],$searchMethod,$keywordType);
+        }else if($queryString['scrollId'] === "0"){
+            //scroll 생성
+            $posts = $this->postService->createScrollIdMatchSingleField($searchField,$queryString['keyword'],$searchMethod,$keywordType,$queryString['size']);
+        }else{
+            //scroll 조회
+            $posts = $this->postService->getPostsByScrollId($queryString['scrollId']);
+        }
+
+        //문구정보만 추출
+        return $this->postService->getPostsInfoFromElasticRawData($posts);
+    }
 
 }

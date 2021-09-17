@@ -38,14 +38,16 @@ class PostDto
      */
     private function validate($content, $search, $categoryId, $userId,$tags)
     {
-        if(preg_match_all("/[-(){}[]/",$content) != 0) throw new BadRequestException('잘못된 요청입니다.');
-        if(!($search == 1 || $search == 0)) throw new BadRequestException('잘못된 요청입니다.');
-        if(gettype($categoryId) != 'integer' || gettype($userId) != 'integer') throw new BadRequestException('잘못된 요청입니다.');
+        if(!isset($categoryId) || !isset($userId) ||  !isset($search) || !isset($content)) throw new BadRequestException();
+        if(mb_strlen($content) > 200) throw new BadRequestException();
+        if(!($search == 1 || $search == 0)) throw new BadRequestException();
+        if(gettype($categoryId) != 'integer' || gettype($userId) != 'integer') throw new BadRequestException();
         if(!empty($tags)){
+            if(count($tags) > 5) throw new BadRequestException();
             foreach ($tags as $tag) {
                 Log::info(gettype($tag['tag']) .  gettype($tag['color']) );
-                if(gettype($tag['tag']) != 'string' ) throw new BadRequestException('잘못된 요청입니다.');
-                if(gettype($tag['color']) != 'integer' ) throw new BadRequestException('잘못된 요청입니다.');
+                if(gettype($tag['tag']) != 'string' ) throw new BadRequestException();
+                if(gettype($tag['color']) != 'integer' ) throw new BadRequestException();
             }
         }
     }

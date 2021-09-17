@@ -9,10 +9,14 @@ use App\Exceptions\BadRequestException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\InternalServerException;
 use App\Exceptions\NotFoundException;
-use App\Exceptions\UnauthorizeException;
+use App\Exceptions\UnAuthorizeException;
+use App\Repositories\UserCategoryRepository;
+use App\Services\CategoryService;
 use App\Services\PostService;
+use App\Services\RequestService;
 use App\Services\UserService;
 use App\utils\ApiUtils;
+use App\utils\ExceptionMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,87 +26,126 @@ class PostController extends Controller
 {
     protected PostService $postService;
     protected UserService $userService;
+    protected RequestService $requestService;
+    protected CategoryService $categoryService;
 
-    public function __construct(PostService $postService,UserService $userService)
+    public function __construct(PostService $postService,UserService $userService,RequestService $requestService,
+                                CategoryService $categoryService)
     {
         $this->postService = $postService;
         $this->userService = $userService;
+        $this->requestService = $requestService;
+        $this->categoryService = $categoryService;
     }
 
 
     /**
-     * postId로 문구 조회
-     * @param Request $request
-     * @param $postId
+     * /user/post/{postId}
+     *  postId로 문구 조회
+     * @param int $postId
      * @return JsonResponse
-     * @throws BadRequestException
      * @throws ForbiddenException
      * @throws InternalServerException
      * @throws NotFoundException
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException
      */
-    function getPost(Request $request, $postId) : JsonResponse
+    function getPost(int $postId) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //post 조회
         $post = $this->postService->getPostById($postId);
-        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
+        if($post->user_id != $userId) throw new ForbiddenException();
 
         //문구가 검색 불가 설정인데 자기 문구가 아닌 경우
         if(!$post->search && $post->user_id != $userId){
-            throw new BadRequestException('조회할 수 없는 문구 입니다.');
+            throw new ForbiddenException();
         }
 
         return ApiUtils::success($post);
     }
 
     /**
+     * /user/post
+     * /user/post?lastId=
      * 사용자(자신)의 모든 문구 조회
      * @param Request $request
+     * @queryParam $lastId ?int
+     * @queryParam $limit ?int
      * @return JsonResponse
      * @throws InternalServerException
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException
+     * @throws BadRequestException
      */
     function getPosts(Request $request) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
-        return ApiUtils::success($this->postService->getPostsByUserId($userId));
+        //pagination 조회인지 확인
+        $query = $this->requestService->getLastIdAndSize($request);
+
+        if(empty($query)){
+            //모두 조회
+            $posts = $this->postService->getPostsByUserId($userId);
+        }else{
+            //pagination
+            $posts = $this->postService->getPagingPostsByUserId($userId,$query['lastId'],$query['size']);
+        }
+
+        return ApiUtils::success($posts);
     }
 
+
     /**
+     * /user/post/category/{categoryId}
+     * /user/post/category/{categoryId}?lastId=
      * 특정 카테고리의 사용자(자신)의 모든 문구 조회
      * @param Request $request
      * @param int $categoryId
+     * @queryParam $lastId ?int
+     * @queryParam $limit ?int
      * @return JsonResponse
-     * @throws UnauthorizeException
+     * @throws InternalServerException
+     * @throws UnAuthorizeException|BadRequestException
      */
     function getMyPostsByCategory(Request $request,int $categoryId) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
-        return ApiUtils::success( $this->postService->getPostsByCategories($userId,$categoryId));
+        //pagination 조회인지 확인
+        $query = $this->requestService->getLastIdAndSize($request);
+
+        //모두 조회
+        if(empty($query)){
+            $posts = $this->postService->getPostsByCategories($userId,$categoryId);
+        }else{
+            //pagination
+            $posts = $this->postService->getPostsByCategoriesCursorPaging($userId,$categoryId,$query['lastId'],$query['size']);
+        }
+
+        return ApiUtils::success($posts);
     }
 
+
     /**
+     * /user/post
      * 문구 등록
      * @param Request $request
      * @return JsonResponse
      * @throws BadRequestException
-     * @throws UnauthorizeException|InternalServerException
+     * @throws UnAuthorizeException|InternalServerException
      */
     function createPost(Request $request) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //request body 유효성 검사
         $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId, $request['tags']);
@@ -111,49 +154,59 @@ class PostController extends Controller
         //문구 등록
         $post = $this->postService->createPost($post);
         $post = $this->postService->getPostFullInfo($post->id);
-        return ApiUtils::success($post);
+        return ApiUtils::success($post,201);
     }
 
     /**
+     * /user/post/{postId}/share
      * 문구 공유횟수 update
-     * @param Request $request
      * @param int $postId
      * @return JsonResponse
      * @throws InternalServerException
      * @throws NotFoundException
      */
-    function updateShareCount(Request $request,int $postId) : JsonResponse
+    function updateShareCount(int $postId) : JsonResponse
     {
+        //문구 조회
         $post = $this->postService->getPostById($postId);
-        $success = $this->postService->updateShareCount($post);
-        if(!$success) throw new InternalServerException('update도중 오류가 발생했습니다.');
 
-        $post = $this->postService->getPostFullInfo($post->id);
-        return ApiUtils::success($post);
+        //공유 횟수 증가
+        $success = $this->postService->updateShareCount($post);
+        if(!$success) throw new InternalServerException();
+
+        return ApiUtils::success('ok');
     }
 
     /**
+     * /user/post/{postId}
      * 문구 수정
      * @param Request $request
-     * @param $postId
+     * @param int $postId
      * @return JsonResponse
-     * @throws UnauthorizeException
-     * @throws ForbiddenException
      * @throws BadRequestException
+     * @throws ForbiddenException
+     * @throws InternalServerException
+     * @throws NotFoundException
+     * @throws UnAuthorizeException
      */
-    function updatePost(Request $request, $postId) : JsonResponse
+    function updatePost(Request $request,int $postId) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //수정할 문구가있는지 조회
         $post = $this->postService->getPostById($postId);
-        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
+        if($post->user_id != $userId) throw new ForbiddenException();
 
         //request body 유효성 검사
         $postDto = new PostDto($request['content'],$request['search'],$request['category_id'],$userId, $request['tags']);
         $postDto = $postDto->getPost();
+
+        //수정할 카테고리가 존재하는지 검사
+        if ( empty( $this->categoryService->haveCategoryByCategoryId($userId,$postDto->category_id) )) {
+            throw new BadRequestException(ExceptionMessage::BADREQUEST_CATEGORY_NOTEXIST);
+        }
 
         //문구 수정
         $this->postService->updatePost($post, $postDto);
@@ -161,28 +214,27 @@ class PostController extends Controller
     }
 
     /**
+     * /user/post/{postId}
      * 문구 삭제
-     * @param Request $request
-     * @param $postId
+     * @param int $postId
      * @return JsonResponse
      * @throws ForbiddenException
      * @throws InternalServerException
      * @throws NotFoundException
-     * @throws UnauthorizeException
+     * @throws UnAuthorizeException
      */
-    function deletePost(Request $request, $postId) : JsonResponse
+    function deletePost(int $postId) : JsonResponse
     {
         //User get
         $userId = Auth::id();
-        if(empty($userId))throw new UnauthorizeException('인증되지 않은 사용자입니다.');
+        if(empty($userId))throw new UnAuthorizeException();
 
         //삭제할 문구가있는지 조회
         $post = $this->postService->getPostById($postId);
-        if($post->user_id != $userId) throw new ForbiddenException("잘못된 접근입니다.");
+        if($post->user_id != $userId) throw new ForbiddenException();
 
         //삭제
         $this->postService->deletePost($post);
-
         return ApiUtils::success(true);
     }
 }

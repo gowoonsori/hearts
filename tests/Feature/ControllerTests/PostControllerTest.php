@@ -168,7 +168,7 @@ class PostControllerTest extends TestCase
                         'id', 'content', 'total_like', 'share_cnt',  'search',
                         'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                     ]
-            ]]);
+                ]]);
     }
 
     /**
@@ -279,8 +279,8 @@ class PostControllerTest extends TestCase
             ->assertJsonPath('response.share_cnt', 1)
             ->assertJsonStructure(['success',
                 'response'=> [
-                        'id', 'content', 'total_like', 'share_cnt',  'search',
-                        'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
+                    'id', 'content', 'total_like', 'share_cnt',  'search',
+                    'created_at', 'updated_at', 'user_id', 'category_id', 'tags'
                 ]
             ]);
     }
@@ -390,14 +390,14 @@ class PostControllerTest extends TestCase
         //when
         $response = $this->patchJson('/user/post/' . $postId,
             [
-            "content" => "수정 문구",
-            "search" => true,
-            "category_id" => $categoryId,
-            "tags" => [
-                ["tag" =>"땅", "color" => 352],
-                ["tag" => "바다", "color" => 342],
-            ]
-        ]);
+                "content" => "수정 문구",
+                "search" => true,
+                "category_id" => $categoryId,
+                "tags" => [
+                    ["tag" =>"땅", "color" => 352],
+                    ["tag" => "바다", "color" => 342],
+                ]
+            ]);
 
         //then
         $response->assertStatus(200)

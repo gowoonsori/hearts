@@ -10,7 +10,9 @@ use App\Models\Post;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
@@ -25,12 +27,11 @@ class UserService
 
     /**
      * 유저 정보  id로 조회
-     * 쿼리 1번 발생
      * @param integer $userId
-     * @return User
-     * @throws NotFoundException
+     * @return object | null
+     * @throws NotFoundException|InternalServerException
      */
-    public function getUser(int $userId): User
+    public function getUser(int $userId): ?object
     {
         $user = $this->userRepository->findById($userId);
         if(empty($user)){
@@ -42,15 +43,25 @@ class UserService
 
     /**
      * 유저 정보  Email 로 조회
-     * 쿼리 1번 발생
      * @param string $email
      * @return User | bool
+     * @throws InternalServerException
      */
     public function getUserByEmail(string $email): User|bool
     {
         return $this->userRepository->findByEmail($email);
     }
 
+    /**
+     * 유저 정보  socialId 로 조회
+     * @param int $socialId
+     * @return User | bool
+     * @throws InternalServerException
+     */
+    public function getUserBySocialId(int $socialId): User|bool
+    {
+        return $this->userRepository->findBySocialId($socialId);
+    }
 
     /**
      * 유저 생성
@@ -65,7 +76,11 @@ class UserService
         $user->email = $socialData->getEmail();
         $user->social_id = $socialData->getId();
 
+        //사용자 생성
         $userId = $this->userRepository->insert($user);
+        $user->id = $userId;
+
+        //기본 카테고리 생성
         $this->categoryService->attachWithUser(1,$userId);
 
         return $user;
@@ -74,7 +89,6 @@ class UserService
 
     /**
      * 문구 생성
-     * 쿼리 1번 발생
      * @param User $user
      * @param Post $post
      * @return void
@@ -84,25 +98,36 @@ class UserService
     }
 
     /**
-     *
+     * 좋아요한 문구 모두 조회
      * @param User $user
      * @return \Illuminate\Support\Collection
+     * @throws InternalServerException
      */
     public function getLikePosts(User $user): \Illuminate\Support\Collection
     {
-        return $this->userRepository->findLikesById($user->id)
-            ->transform(function ($item){
-                $item->tags = json_decode($item->tags);
-                return $item;
-            });
+        return $this->userRepository->findLikesById($user->id);
+    }
+
+    /**
+     * 좋아요한 문구 페이지네이션 조회
+     * @param User $user
+     * @param int $lastId
+     * @param int $limit
+     * @return \Illuminate\Support\Collection
+     * @throws InternalServerException
+     */
+    public function getLikePostsCursorPaging(User $user, int $lastId, int $limit): \Illuminate\Support\Collection
+    {
+        return $this->userRepository->findLikesByIdAndLastIdAndLimit($user->id,$lastId,$limit);
     }
 
     /**
      * 좋아요한 정보 포함한 사용자 정보
-     * 쿼리 2번 발생
      * @param User $user
+     * @return object | null
+     * @throws InternalServerException
      */
-    public function getUserWithLikes(User $user)
+    public function getUserWithLikes(User $user): ?object
     {
         return $this->userRepository->findByIdWithLikes($user->id);
     }

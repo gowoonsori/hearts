@@ -3,6 +3,8 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use App\Exceptions\UnAuthorizeException;
+use App\JwtAuth;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
@@ -12,22 +14,28 @@ class CategoryControllerTest extends TestCase
     use DatabaseTransactions,WithoutMiddleware,ControllerTestUtil;
 
     /**
-     * 사용자의 카테고리 모두 조회 성공 테스트 (category가 없을때)
+     * 사용자의 카테고리 모두 조회 성공 테스트 (기본 카테고리만 있을때)
      * @test
      * @return void
      */
     public function getUserCategoriesSuccessNoCategory()
     {
         //given
-        $userId = $this->storeUserToSession(32);
+        $userId = $this->storeUserToSession(1);
 
         //when
         $response = $this->getJson('/user/category');
 
         //then
+        $response->dump();
         $response->assertStatus(200)
             ->assertJsonPath('success',true)
-            ->assertJsonPath('response',null);
+            ->assertJsonStructure([
+                'success',
+                'response'=>[
+                    0 => ['id','title']
+                ]
+            ]);
     }
 
     /**
@@ -132,7 +140,7 @@ class CategoryControllerTest extends TestCase
 
         //when
         $response = $this->patchJson('/user/category/' . $categoryId,
-        ['title' => $updateTitle]);
+            ['title' => $updateTitle]);
 
         //then
         $response->dump();

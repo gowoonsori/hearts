@@ -3,9 +3,12 @@
 namespace App\Exceptions;
 
 use App\utils\ApiUtils;
+use App\utils\ExceptionMessage;
 use Facade\FlareClient\Api;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -43,20 +46,15 @@ class Handler extends ExceptionHandler
 
     //Exception Handling
     public function render($request,Throwable $e){
-        //default 404 error
-        $error = $e->getMessage() ? $e: '찾을 수 없습니다.';
-        $statusCode = 404;
+        if($e instanceof NotFoundHttpException) $e = new NotFoundException();
+        else if(! ($e instanceof BadRequestException || $e instanceof UnAuthorizeException
+                || $e instanceof ForbiddenException || $e instanceof InternalServerException
+                || $e instanceof NotFoundException) || $e instanceof NotFoundHttpException){
+            $e = new InternalServerException();
+        }
+        Log::error($e);
 
-       if($e instanceof BadRequestException){
-            $statusCode = 400;
-        }else if($e instanceof UnauthorizeException){
-           $statusCode = 401;
-       }else if($e instanceof ForbiddenException){
-           $statusCode = 403;
-       }else if($e instanceof InternalServerException){
-           $statusCode = 500;
-       }
-
-        return ApiUtils::error($error,$statusCode);
+        $statusCode = $e->getCode();
+        return ApiUtils::error($e,$statusCode);
     }
 }

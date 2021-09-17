@@ -2,18 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 
-//임시 url
 Route::get('/',function(){
-    return 'home';
+    return redirect()->away('http://localhost/');
 })->name('home');
 
-Route::get('/success',function(){
-    return 'success';
-});
-
-
-//사이트의 모든 기능은 세션으로 사용자 구분
-Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
+//검색 기능 제외한 사이트의 모든 기능은 JWT Token 으로 사용자 인증
+Route::group(['prefix'=> 'user', 'middleware'=>'jwt'],function(){
     //개인 정보 조회
     Route::get('/','UserController@get');
 
@@ -21,34 +15,37 @@ Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
     Route::prefix('category')->group(function(){
         Route::get('/', 'CategoryController@getCategories');    //내 카테고리 조회
         Route::post('/','CategoryController@createCategory');   //카테고리 생성
-        Route::patch('/{categoryId}','CategoryController@updateCategory');   //카테고리 수정
+        Route::put('/{categoryId}','CategoryController@updateCategory');   //카테고리 수정
         Route::delete('/{categoryId}','CategoryController@deleteCategory');   //카테고리 삭제
     });
 
     //문구
     Route::prefix('post')->group(function(){
         Route::post('/','PostController@createPost');       //문구 생성
-        Route::get('/all','PostController@getPosts');       //나의 모든 문구 조회
+        Route::get('/','PostController@getPosts');       //나의 모든 문구 조회
         Route::get('/like','LikeController@getLikePosts');    //내가 좋아요한 문구 조회
         Route::get('/{postId}','PostController@getPost');   //문구id로 문구 조회
-        Route::patch('/{postId}','PostController@updatePost');       //문구 수정
+        Route::put('/{postId}','PostController@updatePost');       //문구 수정
         Route::delete('/{postId}','PostController@deletePost');       //문구 삭제
         Route::get('/category/{categoryId}','PostController@getMyPostsByCategory'); //특정 카테고리의 나의 문구들 조회
 
         //좋아요
         Route::prefix('/{postId}/like')->group(function(){
-            Route::patch('/','LikeController@likePost');    //좋아요
+            Route::post('/','LikeController@likePost');    //좋아요
             Route::delete('/','LikeController@unlikePost'); //좋아요 취소
         });
 
         //문구 공유 횟수 증가
         Route::patch('/{postId}/share', 'PostController@updateShareCount');
     });
+
+    //로그아웃
+    Route::post('/logout','UserController@destroy')->name('logout');
 });
 
 
 /*
- * 사용자 세션이 없어도 접근할 수 있는 url
+ * 사용자 token이 없어도 접근할 수 있는 url
  * */
 
 //로그인
@@ -56,10 +53,6 @@ Route::group(['prefix'=> 'user', 'middleware'=>'auth'],function(){
 Route::get('/login/{provider}','SocialController@execute')->name('login');
 //Oauth Callback URL
 Route::get('/login/oauth2/code/{provider}','SocialController@execute');
-
-//로그아웃
-Route::post('/logout','SessionController@destroy')->name('logout');
-
 
 //검색
 Route::get('/search/tag','SearchController@tagSearch');  //태그로 검색

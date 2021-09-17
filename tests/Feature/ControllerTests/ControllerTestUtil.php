@@ -2,8 +2,12 @@
 
 namespace Tests\Feature\ControllerTests;
 
+use App\Exceptions\UnAuthorizeException;
+use App\JwtAuth;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Cookie;
 
 trait ControllerTestUtil{
 
@@ -15,6 +19,24 @@ trait ControllerTestUtil{
 
         Auth::setUser($user);
         return $id;
+    }
+
+    /*Jwt 토큰 생성*/
+    /**
+     * @throws UnAuthorizeException
+     */
+    public function createToken($id = 1): string
+    {
+        $user = new User;
+        $user->id = $id;
+        $user->name="홍의성";
+
+        return JwtAuth::createToken($user);
+    }
+
+    public function createCookie($token): string
+    {
+        return Cookie::create(JwtAuth::HEADER, $token,time() + 7200);
     }
 
 

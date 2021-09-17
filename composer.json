@@ -1,25 +1,28 @@
 {
     "name": "laravel/laravel",
     "type": "project",
-    "description": "The Laravel Framework.",
+    "description": "문구 공유 사이트",
     "keywords": [
         "framework",
         "laravel"
     ],
     "license": "MIT",
     "require": {
-        "php": "8.0",
+        "php": "8.0.*",
+        "ext-curl": "*",
         "ext-json": "*",
         "ext-pdo": "*",
+        "babenkoivan/scout-elasticsearch-driver": "^4.3",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
+        "jenssegers/optimus": "^1.1",
         "laravel/framework": "^8.40",
         "laravel/socialite": "^5.2",
         "laravel/tinker": "^2.5",
         "predis/predis": "^1.1",
         "socialiteproviders/manager": "^4.0",
-        "teamtnt/laravel-scout-tntsearch-driver": "^11.5"
+        "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
@@ -61,7 +64,8 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "disable-tls" : true
     },
     "minimum-stability": "dev",
     "prefer-stable": true
